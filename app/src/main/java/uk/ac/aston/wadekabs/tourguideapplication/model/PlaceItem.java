@@ -15,6 +15,8 @@ public class PlaceItem implements ClusterItem, Serializable {
     private double lat, lng;
     private String title;
     private String address;
+    private boolean favourite = false;
+    private boolean visited = false;
 
     public String getId() {
         return id;
@@ -59,5 +61,21 @@ public class PlaceItem implements ClusterItem, Serializable {
     @Override
     public boolean equals(Object otherPlaceItem) {
         return otherPlaceItem instanceof PlaceItem && getId().equals(((PlaceItem) otherPlaceItem).getId());
+    }
+
+    public boolean isFavourite() {
+        return favourite;
+    }
+
+    public void setFavourite(boolean favourite) {
+        this.favourite = favourite;
+    }
+
+    public boolean isVisited() {
+        return visited;
+    }
+
+    public void setVisited(boolean visited) {
+        this.visited = visited;
     }
 }

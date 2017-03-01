@@ -1,6 +1,7 @@
 package uk.ac.aston.wadekabs.tourguideapplication;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
@@ -10,6 +11,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageView;
+
+import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceItem;
+import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceItemContent;
 
 /**
  * An activity representing a single PlaceItem detail screen. This
@@ -18,6 +23,8 @@ import android.view.View;
  * in a {@link PlaceItemListActivity}.
  */
 public class PlaceItemDetailActivity extends AppCompatActivity {
+
+    private PlaceItem mSelectedPlaceItem;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,14 +54,16 @@ public class PlaceItemDetailActivity extends AppCompatActivity {
             // Create the detail fragment and add it to the activity
             // using a fragment transaction.
             Bundle arguments = new Bundle();
-            arguments.putSerializable(PlaceItemDetailFragment.SELECTED_PLACE_ITEM,
-                    getIntent().getSerializableExtra(PlaceItemDetailFragment.SELECTED_PLACE_ITEM));
+            arguments.putInt(PlaceItemDetailFragment.SELECTED_PLACE_ITEM,
+                    getIntent().getIntExtra(PlaceItemDetailFragment.SELECTED_PLACE_ITEM, 0));
             PlaceItemDetailFragment fragment = new PlaceItemDetailFragment();
             fragment.setArguments(arguments);
             getSupportFragmentManager().beginTransaction()
                     .add(R.id.placeitem_detail_container, fragment)
                     .commit();
         }
+
+        mSelectedPlaceItem = PlaceItemContent.getInstance().getPlaceItemList().get(getIntent().getIntExtra(PlaceItemDetailFragment.SELECTED_PLACE_ITEM, 0));
     }
 
     @Override
@@ -96,5 +105,18 @@ public class PlaceItemDetailActivity extends AppCompatActivity {
 
         // Broadcast the Intent.
         startActivity(Intent.createChooser(share, "Share to"));
+    }
+
+    public void onClickFavourite(View view) {
+
+        mSelectedPlaceItem.setFavourite(!mSelectedPlaceItem.isFavourite());
+
+        ((ImageView) view).setColorFilter(mSelectedPlaceItem.isFavourite() ? Color.RED : Color.GRAY);
+    }
+
+    public void onClickVisited(View view) {
+        mSelectedPlaceItem.setVisited(!mSelectedPlaceItem.isVisited());
+
+        ((ImageView) view).setColorFilter(mSelectedPlaceItem.isVisited() ? Color.GREEN : Color.GRAY);
     }
 }

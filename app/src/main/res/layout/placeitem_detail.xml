@@ -29,6 +29,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="0.5"
+            android:onClick="onClickFavourite"
             app:srcCompat="@drawable/ic_favourite" />
 
         <ImageView
@@ -36,6 +37,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="0.5"
+            android:onClick="onClickVisited"
             app:srcCompat="@drawable/ic_check_circle" />
 
     </LinearLayout>

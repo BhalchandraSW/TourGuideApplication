@@ -4,6 +4,7 @@ import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -24,6 +25,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.android.volley.Request;
@@ -67,6 +69,7 @@ import java.util.List;
 
 import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceFilter;
 import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceItem;
+import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceItemContent;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener, ViewPager.OnPageChangeListener {
@@ -83,7 +86,7 @@ public class MainActivity extends AppCompatActivity
 
     private ClusterManager<PlaceItem> mClusterManager;
 
-    private List<PlaceItem> placeItemList = new ArrayList<>();
+    private List<PlaceItem> mPlaceItemList = new ArrayList<>();
 
     private List<Circle> mCircleList = new ArrayList<>();
 
@@ -149,6 +152,7 @@ public class MainActivity extends AppCompatActivity
         mViewPager.setAdapter(mSectionsPagerAdapter);
         mViewPager.addOnPageChangeListener(this);
 
+        mPlaceItemList = PlaceItemContent.getInstance().getPlaceItemList();
     }
 
     @Override
@@ -225,6 +229,17 @@ public class MainActivity extends AppCompatActivity
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
+
+        switch (id) {
+            case R.id.nav_home:
+                break;
+            case R.id.nav_favourites:
+
+                Intent intent = new Intent(getApplicationContext(), PlaceItemListActivity.class);
+                startActivity(intent);
+
+                break;
+        }
 
         if (id == R.id.nav_camera) {
             // Handle the camera action
@@ -307,7 +322,7 @@ public class MainActivity extends AppCompatActivity
         mClusterManager.setOnClusterItemClickListener(new ClusterManager.OnClusterItemClickListener<PlaceItem>() {
             @Override
             public boolean onClusterItemClick(PlaceItem selectedPlaceItem) {
-                mViewPager.setCurrentItem(placeItemList.indexOf(selectedPlaceItem), true);
+                mViewPager.setCurrentItem(mPlaceItemList.indexOf(selectedPlaceItem), true);
                 return false;
             }
         });
@@ -505,7 +520,7 @@ public class MainActivity extends AppCompatActivity
                                             placeItem.setTitle(String.valueOf(myPlace.getName()));
                                             placeItem.setAddress(String.valueOf(myPlace.getAddress()));
 
-                                            placeItemList.add(placeItem);
+                                            mPlaceItemList.add(placeItem);
 
                                             mSectionsPagerAdapter.notifyDataSetChanged();
 
@@ -540,7 +555,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onPageSelected(int position) {
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(placeItemList.get(position).getPosition(), 15.0f));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mPlaceItemList.get(position).getPosition(), 15.0f));
     }
 
     @Override
@@ -549,10 +564,8 @@ public class MainActivity extends AppCompatActivity
 
     public void onClickMoreInformation(View view) {
 
-        PlaceItem selectedPlaceItem = placeItemList.get(mViewPager.getCurrentItem());
-
         Intent intent = new Intent(getApplicationContext(), PlaceItemDetailActivity.class);
-        intent.putExtra(PlaceItemDetailFragment.SELECTED_PLACE_ITEM, selectedPlaceItem);
+        intent.putExtra(PlaceItemDetailFragment.SELECTED_PLACE_ITEM, mViewPager.getCurrentItem());
 
         startActivity(intent);
     }
@@ -593,6 +606,12 @@ public class MainActivity extends AppCompatActivity
             TextView textView = (TextView) rootView.findViewById(R.id.address);
             textView.setText(placeItem != null ? placeItem.getAddress() : "");
 
+            ImageView favouriteView = (ImageView) rootView.findViewById(R.id.favourite);
+            favouriteView.setColorFilter(placeItem.isFavourite() ? Color.RED : Color.GRAY);
+
+            ImageView visitedView = (ImageView) rootView.findViewById(R.id.visited);
+            visitedView.setColorFilter(placeItem.isVisited() ? Color.GREEN : Color.GRAY);
+
             return rootView;
         }
     }
@@ -611,17 +630,17 @@ public class MainActivity extends AppCompatActivity
         public Fragment getItem(int position) {
             // getItem is called to instantiate the fragment for the given page.
             // Return a PlaceholderFragment (defined as a static inner class below).
-            return MainActivity.PlaceholderFragment.newInstance(placeItemList.get(position));
+            return MainActivity.PlaceholderFragment.newInstance(mPlaceItemList.get(position));
         }
 
         @Override
         public int getCount() {
-            return placeItemList.size();
+            return mPlaceItemList.size();
         }
 
         @Override
         public CharSequence getPageTitle(int position) {
-            return placeItemList.get(position).getTitle();
+            return mPlaceItemList.get(position).getTitle();
         }
     }
 }

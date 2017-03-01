@@ -1,15 +1,18 @@
 package uk.ac.aston.wadekabs.tourguideapplication;
 
 import android.app.Activity;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceItem;
+import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceItemContent;
 
 /**
  * A fragment representing a single PlaceItem detail screen.
@@ -27,6 +30,7 @@ public class PlaceItemDetailFragment extends Fragment {
     /**
      * The dummy content this fragment is presenting.
      */
+    private int mPlaceItemPosition;
     private PlaceItem mPlaceItem;
 
     /**
@@ -44,11 +48,12 @@ public class PlaceItemDetailFragment extends Fragment {
             // Load the dummy content specified by the fragment
             // arguments. In a real-world scenario, use a Loader
             // to load content from a content provider.
-            mPlaceItem = (PlaceItem) getArguments().getSerializable(SELECTED_PLACE_ITEM);
+            mPlaceItemPosition = getArguments().getInt(SELECTED_PLACE_ITEM);
 
             Activity activity = this.getActivity();
             CollapsingToolbarLayout appBarLayout = (CollapsingToolbarLayout) activity.findViewById(R.id.toolbar_layout);
             if (appBarLayout != null) {
+                mPlaceItem = PlaceItemContent.getInstance().getPlaceItemList().get(mPlaceItemPosition);
                 appBarLayout.setTitle(mPlaceItem.getTitle());
             }
         }
@@ -61,7 +66,14 @@ public class PlaceItemDetailFragment extends Fragment {
 
         // Show the dummy content as text in a TextView.
         if (mPlaceItem != null) {
+
             ((TextView) rootView.findViewById(R.id.placeitem_detail)).setText(mPlaceItem.getAddress());
+
+            ImageView favouriteView = (ImageView) rootView.findViewById(R.id.favourite);
+            favouriteView.setColorFilter(mPlaceItem.isFavourite() ? Color.RED : Color.GRAY);
+
+            ImageView visitedView = (ImageView) rootView.findViewById(R.id.visited);
+            visitedView.setColorFilter(mPlaceItem.isVisited() ? Color.GREEN : Color.GRAY);
         }
 
         return rootView;
