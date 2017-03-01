@@ -52,7 +52,10 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.UiSettings;
-import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.Circle;
+import com.google.android.gms.maps.model.CircleOptions;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.VisibleRegion;
 import com.google.maps.android.clustering.ClusterManager;
 
 import org.json.JSONArray;
@@ -60,9 +63,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceFilter;
 import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceItem;
@@ -83,10 +84,8 @@ public class MainActivity extends AppCompatActivity
     private ClusterManager<PlaceItem> mClusterManager;
 
     private List<PlaceItem> placeItemList = new ArrayList<>();
-    private Map<PlaceItem, Marker> placeItemMarkerMap = new LinkedHashMap<>();
 
-
-//    private Map<String, PlaceItem> placeItemMap = new LinkedHashMap<>();
+    private List<Circle> mCircleList = new ArrayList<>();
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -249,6 +248,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onMapReady(GoogleMap googleMap) {
 
+
         mMap = googleMap;
 
         UiSettings uiSettings = mMap.getUiSettings();
@@ -257,6 +257,52 @@ public class MainActivity extends AppCompatActivity
         mClusterManager = new ClusterManager<>(getApplicationContext(), mMap);
         mMap.setOnCameraIdleListener(mClusterManager);
         mMap.setOnMarkerClickListener(mClusterManager);
+
+        mMap.setOnCameraMoveListener(new GoogleMap.OnCameraMoveListener() {
+            @Override
+            public void onCameraMove() {
+
+                for (Circle circle : mCircleList) {
+
+                    VisibleRegion region = mMap.getProjection().getVisibleRegion();
+
+                    if (region.latLngBounds.contains(circle.getCenter())) {
+                        circle.setVisible(false);
+                    } else {
+
+                        Location nearLeftLocation = new Location("");
+                        nearLeftLocation.setLatitude(region.nearLeft.latitude);
+                        nearLeftLocation.setLongitude(region.nearLeft.longitude);
+
+                        Location nearRightLocation = new Location("");
+                        nearRightLocation.setLatitude(region.nearRight.latitude);
+                        nearRightLocation.setLongitude(region.nearRight.longitude);
+
+                        double maximumRadius = nearLeftLocation.distanceTo(nearRightLocation);
+                        double minimumRadius = maximumRadius / 2;
+
+                        Location markerLocation = new Location("");
+                        markerLocation.setLatitude(circle.getCenter().latitude);
+                        markerLocation.setLongitude(circle.getCenter().longitude);
+
+                        LatLng currentTarget = mMap.getCameraPosition().target;
+
+                        Location currentTargetLocation = new Location("");
+                        currentTargetLocation.setLatitude(currentTarget.latitude);
+                        currentTargetLocation.setLongitude(currentTarget.longitude);
+
+                        double radius = markerLocation.distanceTo(currentTargetLocation);
+
+                        if (minimumRadius <= radius && radius <= maximumRadius) {
+                            circle.setVisible(true);
+                            circle.setRadius(radius);
+                        } else {
+                            circle.setVisible(false);
+                        }
+                    }
+                }
+            }
+        });
 
         mClusterManager.setOnClusterItemClickListener(new ClusterManager.OnClusterItemClickListener<PlaceItem>() {
             @Override
@@ -415,9 +461,9 @@ public class MainActivity extends AppCompatActivity
                 String url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?" +
                         "key=" + "AIzaSyAcFAikTNJ8gNQm7LXtpJDL_nE3b4APpDQ" +
                         "&location=" + mCurrentLocation.getLatitude() + "," + mCurrentLocation.getLongitude() +
-                        "&radius=50000"; // +
-                // "&type=" + placeType;
-                // "&minprice=" + PlaceFilter.getInstance().getCost() + "&maxprice=" + PlaceFilter.getInstance().getCost();
+                        "&radius=50000" +
+                        "&type=" + placeType +
+                        "&minprice=" + PlaceFilter.getInstance().getCost() + "&maxprice=" + PlaceFilter.getInstance().getCost();
 
                 // Instantiate the RequestQueue.
                 RequestQueue queue = Volley.newRequestQueue(this);
@@ -464,6 +510,7 @@ public class MainActivity extends AppCompatActivity
                                             mSectionsPagerAdapter.notifyDataSetChanged();
 
                                             mClusterManager.addItem(placeItem);
+                                            mCircleList.add(mMap.addCircle(new CircleOptions().center(placeItem.getPosition()).visible(false)));
                                         }
                                         places.release();
                                     }

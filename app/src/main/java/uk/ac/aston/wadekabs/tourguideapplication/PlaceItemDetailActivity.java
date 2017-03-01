@@ -1,12 +1,15 @@
 package uk.ac.aston.wadekabs.tourguideapplication;
 
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
+import android.view.View;
 
 /**
  * An activity representing a single PlaceItem detail screen. This
@@ -69,5 +72,29 @@ public class PlaceItemDetailActivity extends AppCompatActivity {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    public void onClickShare(View view) {
+
+        // Create the new Intent using the 'Send' action.
+        Intent share = new Intent(Intent.ACTION_SEND);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            Drawable drawable = getResources().getDrawable(R.drawable.ic_favourite, null);
+            share.setType("image/jpeg");
+        }
+
+        // Set the MIME type
+//        share.setType(type);
+//
+//        // Create the URI from the media
+//        File media = new File(mediaPath);
+//        Uri uri = Uri.fromFile(media);
+//
+//        // Add the URI to the Intent.
+//        share.putExtra(Intent.EXTRA_STREAM, uri);
+
+        // Broadcast the Intent.
+        startActivity(Intent.createChooser(share, "Share to"));
     }
 }
