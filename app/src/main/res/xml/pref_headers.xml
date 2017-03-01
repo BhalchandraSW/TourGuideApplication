@@ -1,0 +1,9 @@
+<preference-headers xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- These settings headers are only used on tablets. -->
+    <header
+        android:fragment="uk.ac.aston.wadekabs.tourguideapplication.FilterPreferenceFragment"
+        android:icon="@drawable/ic_menu_filter_list"
+        android:title="@string/action_filter" />
+
+</preference-headers>

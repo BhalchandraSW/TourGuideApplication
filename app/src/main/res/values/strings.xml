@@ -1,0 +1,44 @@
+<resources>
+    <string name="app_name">Tour Guide Application</string>
+    <string name="title_activity_main">Tour Guide Application</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <string name="action_settings">Settings</string>
+    <string name="action_filter">Filter</string>
+    <string name="title_activity_settings">Settings</string>
+
+    <!-- Strings related to Settings -->
+
+    <string-array name="pref_budget_list_titles">
+        <item>Most Affordable</item>
+        <item>Affordable</item>
+        <item>Moderate</item>
+        <item>Expensive</item>
+        <item>Most Expensive</item>
+    </string-array>
+
+    <string-array name="pref_budget_list_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+    </string-array>
+
+    <string-array name="pref_type_list_titles">
+        <item>Art Gallery</item>
+        <item>Museum</item>
+        <item>Restaurant</item>
+    </string-array>
+
+    <string-array name="pref_type_list_values">
+        <item>art_gallery</item>
+        <item>museum</item>
+        <item>restaurant</item>
+    </string-array>
+    <string name="title_placeitem_list">PlaceItems</string>
+    <string name="title_placeitem_detail">PlaceItem Detail</string>
+
+</resources>

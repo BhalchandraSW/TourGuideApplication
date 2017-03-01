@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <ListPreference
+        android:defaultValue="2"
+        android:dialogIcon="@drawable/ic_attach_money"
+        android:entries="@array/pref_budget_list_titles"
+        android:entryValues="@array/pref_budget_list_values"
+        android:icon="@drawable/ic_attach_money"
+        android:key="cost_preference"
+        android:title="Cost" />
+
+    <MultiSelectListPreference
+        android:defaultValue="@array/pref_type_list_values"
+        android:dialogIcon="@drawable/ic_place"
+        android:entries="@array/pref_type_list_titles"
+        android:entryValues="@array/pref_type_list_values"
+        android:icon="@drawable/ic_place"
+        android:key="type_preference"
+        android:title="Type(s)" />
+
+</PreferenceScreen>
