@@ -4,8 +4,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -16,11 +14,19 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.List;
 
 import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceItem;
 import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceItemContent;
+import uk.ac.aston.wadekabs.tourguideapplication.model.User;
 
 /**
  * An activity representing a list of PlaceItems. This activity
@@ -47,14 +53,6 @@ public class PlaceItemListActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         toolbar.setTitle(getTitle());
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
         // Show the Up button in the action bar.
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
@@ -92,6 +90,36 @@ public class PlaceItemListActivity extends AppCompatActivity {
     }
 
     private void setupRecyclerView(@NonNull RecyclerView recyclerView) {
+
+        DatabaseReference database = FirebaseDatabase.getInstance().getReference();
+        database.child("favourites").child(User.getUser().getUid()).addChildEventListener(new ChildEventListener() {
+
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                Toast.makeText(getApplicationContext(), dataSnapshot.getKey(), Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
         recyclerView.setAdapter(new SimpleItemRecyclerViewAdapter(PlaceItemContent.getInstance().getPlaceItemList()));
     }
 
@@ -107,22 +135,27 @@ public class PlaceItemListActivity extends AppCompatActivity {
         @Override
         public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             View view = LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.placeitem_list_content, parent, false);
+                    .inflate(R.layout.placeitem_card, parent, false);
             return new ViewHolder(view);
         }
 
         @Override
-        public void onBindViewHolder(final ViewHolder holder, int position) {
-            holder.mItem = mValues.get(position);
-            holder.mIdView.setText(mValues.get(position).getId());
-            holder.mContentView.setText(mValues.get(position).getAddress());
+        public void onBindViewHolder(final ViewHolder holder, final int position) {
 
-            holder.mView.setOnClickListener(new View.OnClickListener() {
+//            holder.mItem = mValues.get(position);
+//            holder.mIdView.setText(mValues.get(position).getId());
+//            holder.mContentView.setText(mValues.get(position).getAddress());
+
+            holder.mItem = PlaceItemContent.getInstance().getPlaceItemList().get(position);
+            holder.nameTextView.setText(holder.mItem.getTitle());
+            holder.addressTextView.setText(holder.mItem.getAddress());
+
+            holder.mItemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     if (mTwoPane) {
                         Bundle arguments = new Bundle();
-                        arguments.putString(PlaceItemDetailFragment.SELECTED_PLACE_ITEM, holder.mItem.getId());
+                        arguments.putInt(PlaceItemDetailFragment.SELECTED_PLACE_ITEM, holder.getAdapterPosition());
                         PlaceItemDetailFragment fragment = new PlaceItemDetailFragment();
                         fragment.setArguments(arguments);
                         getSupportFragmentManager().beginTransaction()
@@ -131,7 +164,7 @@ public class PlaceItemListActivity extends AppCompatActivity {
                     } else {
                         Context context = v.getContext();
                         Intent intent = new Intent(context, PlaceItemDetailActivity.class);
-                        intent.putExtra(PlaceItemDetailFragment.SELECTED_PLACE_ITEM, holder.mItem.getId());
+                        intent.putExtra(PlaceItemDetailFragment.SELECTED_PLACE_ITEM, holder.getAdapterPosition());
 
                         context.startActivity(intent);
                     }
@@ -145,21 +178,23 @@ public class PlaceItemListActivity extends AppCompatActivity {
         }
 
         public class ViewHolder extends RecyclerView.ViewHolder {
-            public final View mView;
-            public final TextView mIdView;
-            public final TextView mContentView;
+
             public PlaceItem mItem;
+            public final View mItemView;
 
-            public ViewHolder(View view) {
-                super(view);
-                mView = view;
-                mIdView = (TextView) view.findViewById(R.id.id);
-                mContentView = (TextView) view.findViewById(R.id.content);
-            }
+            public TextView nameTextView;
+            public TextView addressTextView;
+            public TextView descriptionTextView;
 
-            @Override
-            public String toString() {
-                return super.toString() + " '" + mContentView.getText() + "'";
+            public ViewHolder(View itemView) {
+
+                super(itemView);
+
+                mItemView = itemView;
+
+                nameTextView = (TextView) itemView.findViewById(R.id.nameTextView);
+                addressTextView = (TextView) itemView.findViewById(R.id.addressTextView);
+                descriptionTextView = (TextView) itemView.findViewById(R.id.descriptionTextView);
             }
         }
     }

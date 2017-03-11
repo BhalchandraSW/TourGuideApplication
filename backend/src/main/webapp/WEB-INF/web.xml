@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<web-app version="2.5" xmlns="http://java.sun.com/xml/ns/javaee">
+
+    <servlet>
+        <servlet-name>MyServlet</servlet-name>
+        <servlet-class>uk.ac.aston.wadekabs.tourguideapplication.backend.MyServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>MyServlet</servlet-name>
+        <url-pattern>/hello</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>NearbyPlacesServlet</servlet-name>
+        <servlet-class>uk.ac.aston.wadekabs.tourguideapplication.backend.NearbyPlacesServlet
+        </servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>NearbyPlacesServlet</servlet-name>
+        <url-pattern>/nearbyPlaces</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>PlaceDetailsServlet</servlet-name>
+        <servlet-class>uk.ac.aston.wadekabs.tourguideapplication.backend.PlaceDetailsServlet
+        </servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>PlaceDetailsServlet</servlet-name>
+        <url-pattern>/placeDetails</url-pattern>
+    </servlet-mapping>
+
+    <welcome-file-list>
+        <welcome-file>index.html</welcome-file>
+    </welcome-file-list>
+
+</web-app>

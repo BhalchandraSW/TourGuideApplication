@@ -1,25 +1,29 @@
 package uk.ac.aston.wadekabs.tourguideapplication;
 
 import android.app.FragmentTransaction;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
+import android.graphics.Bitmap;
 import android.location.Location;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.CardView;
+import android.support.v7.widget.PagerSnapHelper;
+import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SnapHelper;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -28,12 +32,6 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.Volley;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
@@ -46,8 +44,9 @@ import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStates;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
-import com.google.android.gms.location.places.Place;
-import com.google.android.gms.location.places.PlaceBuffer;
+import com.google.android.gms.location.places.PlacePhotoMetadata;
+import com.google.android.gms.location.places.PlacePhotoMetadataBuffer;
+import com.google.android.gms.location.places.PlacePhotoMetadataResult;
 import com.google.android.gms.location.places.Places;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -58,21 +57,27 @@ import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.VisibleRegion;
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.maps.android.clustering.ClusterManager;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceFilter;
 import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceItem;
 import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceItemContent;
+import uk.ac.aston.wadekabs.tourguideapplication.model.SupportedPlaceTypes;
+import uk.ac.aston.wadekabs.tourguideapplication.model.User;
+
+
+// TODO: When internet is not available
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener, ViewPager.OnPageChangeListener {
+        implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
     private static final int REQUEST_CODE_ACCESS_FINE_LOCATION = 1;
     private static final int REQUEST_CHECK_SETTINGS = 2;
@@ -81,7 +86,7 @@ public class MainActivity extends AppCompatActivity
     private GoogleApiClient mGoogleApiClient;
     private FilterPreferenceFragment mFilterPreferenceFragment;
 
-    private Location mLastLocation, mCurrentLocation;
+    private Location mCurrentLocation;
     private LocationRequest mLocationRequest;
 
     private ClusterManager<PlaceItem> mClusterManager;
@@ -90,21 +95,10 @@ public class MainActivity extends AppCompatActivity
 
     private List<Circle> mCircleList = new ArrayList<>();
 
-    /**
-     * The {@link android.support.v4.view.PagerAdapter} that will provide
-     * fragments for each of the sections. We use a
-     * {@link FragmentPagerAdapter} derivative, which will keep every
-     * loaded fragment in memory. If this becomes too memory intensive, it
-     * may be best to switch to a
-     * {@link android.support.v4.app.FragmentStatePagerAdapter}.
-     */
-    private MainActivity.SectionsPagerAdapter mSectionsPagerAdapter;
+    private RecyclerView mRecyclerView;
+    private PlaceItemRecyclerViewAdapter mPlaceItemRecyclerViewAdapter;
 
-    /**
-     * The {@link ViewPager} that will host the section contents.
-     */
-    private ViewPager mViewPager;
-
+    private ViewPager mPhotosViewPager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -124,35 +118,94 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
+        TextView userNameTextView = (TextView) navigationView.findViewById(R.id.userNameTextView);
+        if (userNameTextView != null)
+            userNameTextView.setText(User.getUser().getDisplayName());
+
+        TextView userEmailTextView = (TextView) navigationView.findViewById(R.id.userEmailTextView);
+        if (userEmailTextView != null)
+            userEmailTextView.setText(User.getUser().getEmail());
+
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
         mFilterPreferenceFragment = (FilterPreferenceFragment) getFragmentManager().findFragmentById(R.id.filter);
+        getFragmentManager().beginTransaction().hide(mFilterPreferenceFragment).commit();
 
         // Create an instance of GoogleAPIClient.
         if (mGoogleApiClient == null) {
             mGoogleApiClient = new GoogleApiClient.Builder(this)
                     .addConnectionCallbacks(this)
-                    .addOnConnectionFailedListener(this)
-                    .addApi(Places.GEO_DATA_API)
                     .addApi(LocationServices.API)
+                    .addApi(Places.GEO_DATA_API)
+                    .enableAutoManage(this, this)
                     .build();
         }
 
         createLocationRequest();
 
-        // Create the adapter that will return a fragment for each of the three
-        // primary sections of the activity.
-        mSectionsPagerAdapter = new MainActivity.SectionsPagerAdapter(getSupportFragmentManager());
+        mPlaceItemRecyclerViewAdapter = new PlaceItemRecyclerViewAdapter(PlaceItemContent.getInstance().getPlaceItemList());
+        mRecyclerView = (RecyclerView) findViewById(R.id.placeitem_card_list);
+        mRecyclerView.setHasFixedSize(true);
+        mRecyclerView.setAdapter(mPlaceItemRecyclerViewAdapter);
 
-        // Set up the ViewPager with the sections adapter.
-        mViewPager = (ViewPager) findViewById(R.id.place_details_container);
-        mViewPager.setAdapter(mSectionsPagerAdapter);
-        mViewPager.addOnPageChangeListener(this);
+        SnapHelper snapHelper = new PagerSnapHelper();
+        snapHelper.attachToRecyclerView(mRecyclerView);
 
         mPlaceItemList = PlaceItemContent.getInstance().getPlaceItemList();
+
+        final DatabaseReference placeDetailsReference = FirebaseDatabase.getInstance().getReference("placeDetails");
+
+        FirebaseDatabase.getInstance().getReference("nearbyPlaces").child(User.getUser().getUid()).addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+
+                placeDetailsReference.child(dataSnapshot.getKey()).addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+
+                        PlaceItem placeItem = dataSnapshot.getValue(PlaceItem.class);
+                        SupportedPlaceTypes types = placeItem.getTypes();
+
+                        if (types.isRestaurant() || types.isFood()) {
+
+                            placeItem.setId(dataSnapshot.getKey());
+                            PlaceItemContent.getInstance().getPlaceItemList().add(placeItem);
+                            mPlaceItemRecyclerViewAdapter.notifyDataSetChanged();
+
+                            mClusterManager.addItem(placeItem);
+                            mCircleList.add(mMap.addCircle(new CircleOptions().center(placeItem.getPosition()).visible(false)));
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        Log.e("MainActivity", databaseError.getMessage() + databaseError.getDetails());
+                    }
+                });
+
+            }
+
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+            }
+        });
     }
 
     @Override
@@ -163,18 +216,6 @@ public class MainActivity extends AppCompatActivity
         } else {
             super.onBackPressed();
         }
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        mGoogleApiClient.connect();
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        mGoogleApiClient.disconnect();
     }
 
     @Override
@@ -224,35 +265,22 @@ public class MainActivity extends AppCompatActivity
         return super.onOptionsItemSelected(item);
     }
 
-    @SuppressWarnings("StatementWithEmptyBody")
     @Override
-    public boolean onNavigationItemSelected(MenuItem item) {
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
         switch (id) {
+
             case R.id.nav_home:
                 break;
+
             case R.id.nav_favourites:
 
                 Intent intent = new Intent(getApplicationContext(), PlaceItemListActivity.class);
                 startActivity(intent);
 
                 break;
-        }
-
-        if (id == R.id.nav_camera) {
-            // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
-
-        } else if (id == R.id.nav_slideshow) {
-
-        } else if (id == R.id.nav_manage) {
-
-        } else if (id == R.id.nav_share) {
-
-        } else if (id == R.id.nav_send) {
-
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -263,8 +291,32 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onMapReady(GoogleMap googleMap) {
 
-
         mMap = googleMap;
+
+        mRecyclerView.addOnChildAttachStateChangeListener(new RecyclerView.OnChildAttachStateChangeListener() {
+
+            @Override
+            public void onChildViewAttachedToWindow(View view) {
+                mMap.setPadding(0, 0, 0, mRecyclerView.getMeasuredHeight());
+            }
+
+            @Override
+            public void onChildViewDetachedFromWindow(View view) {
+
+            }
+        });
+
+        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+
+                int i = recyclerView.computeHorizontalScrollOffset() / (recyclerView.getMeasuredWidth() / mPlaceItemList.size()) / 4;
+
+                if (0 <= i && i < mPlaceItemList.size())
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(mPlaceItemList.get(i).getPosition(), 15.0f));
+            }
+        });
 
         UiSettings uiSettings = mMap.getUiSettings();
         uiSettings.setMapToolbarEnabled(false);
@@ -322,8 +374,10 @@ public class MainActivity extends AppCompatActivity
         mClusterManager.setOnClusterItemClickListener(new ClusterManager.OnClusterItemClickListener<PlaceItem>() {
             @Override
             public boolean onClusterItemClick(PlaceItem selectedPlaceItem) {
-                mViewPager.setCurrentItem(mPlaceItemList.indexOf(selectedPlaceItem), true);
-                return false;
+                // TODO: Make sure this is synced with correct place item list.
+                mRecyclerView.smoothScrollToPosition(mPlaceItemList.indexOf(selectedPlaceItem));
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(selectedPlaceItem.getPosition(), 15.0f));
+                return true;
             }
         });
 
@@ -343,8 +397,6 @@ public class MainActivity extends AppCompatActivity
                 return;
             }
             mMap.setMyLocationEnabled(true);
-
-            mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
         }
     }
 
@@ -363,17 +415,6 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this, android.Manifest.permission.ACCESS_FINE_LOCATION)) {
-                // TODO: Show an explanation to the user *asynchronously*
-                // -- don't block this thread waiting for the user's response!
-                // After the user sees the explanation, try again to request the permission.
-            } else {
-                ActivityCompat.requestPermissions(MainActivity.this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_CODE_ACCESS_FINE_LOCATION);
-            }
-            return;
-        }
-        mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
 
         createLocationRequest();
 
@@ -454,193 +495,158 @@ public class MainActivity extends AppCompatActivity
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
     }
 
-    private boolean isUpdated = false;
-
     @Override
     public void onLocationChanged(Location location) {
-        mCurrentLocation = location;
-        if (!isUpdated) {
-            updateUI();
-            isUpdated = true;
-        }
+        FirebaseDatabase.getInstance().getReference("locations").child(User.getUser().getUid()).child("lat").setValue(location.getLatitude());
+        FirebaseDatabase.getInstance().getReference("locations").child(User.getUser().getUid()).child("lng").setValue(location.getLongitude());
     }
 
-    private void updateUI() {
+    public class PlaceItemRecyclerViewAdapter extends RecyclerView.Adapter<PlaceItemRecyclerViewAdapter.PlaceItemViewHolder> {
 
-        if (mCurrentLocation != null) {
+        private List<PlaceItem> mPlaceItemList;
 
-            mClusterManager.clearItems();
+        public PlaceItemRecyclerViewAdapter(List<PlaceItem> placeItemList) {
+            mPlaceItemList = placeItemList;
+        }
 
-            for (String placeType : PlaceFilter.getInstance().getPlaceTypes()) {
+        @Override
+        public PlaceItemViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            CardView view = (CardView) LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.placeitem_card, parent, false);
+            return new PlaceItemViewHolder(view);
+        }
 
-                String url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?" +
-                        "key=" + "AIzaSyAcFAikTNJ8gNQm7LXtpJDL_nE3b4APpDQ" +
-                        "&location=" + mCurrentLocation.getLatitude() + "," + mCurrentLocation.getLongitude() +
-                        "&radius=50000" +
-                        "&type=" + placeType +
-                        "&minprice=" + PlaceFilter.getInstance().getCost() + "&maxprice=" + PlaceFilter.getInstance().getCost();
+        @Override
+        public void onBindViewHolder(final PlaceItemViewHolder holder, int position) {
+            holder.mItem = PlaceItemContent.getInstance().getPlaceItemList().get(position);
+            holder.nameTextView.setText(holder.mItem.getTitle());
+            holder.addressTextView.setText(holder.mItem.getAddress());
 
-                // Instantiate the RequestQueue.
-                RequestQueue queue = Volley.newRequestQueue(this);
+            new PhotoTask(holder).execute(holder.mItem.getId());
 
-                // Request a string response from the provided URL.
-                JsonObjectRequest placeRequest = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-
-                        try {
-                            JSONArray results = response.getJSONArray("results");
-
-                            for (int i = 0; i < results.length(); i++) {
-                                JSONObject placeObject = (JSONObject) results.get(i);
-                                final String placeId = placeObject.getString("place_id");
-
-                                // String url2 = "https://kgsearch.googleapis.com/v1/entities:search?key=AIzaSyAcFAikTNJ8gNQm7LXtpJDL_nE3b4APpDQ&ids=" + placeId;
-
-//                                JsonObjectRequest placeDetailsRequest = new JsonObjectRequest(Request.Method.GET, url2, null, new Response.Listener<JSONObject>() {
-//                                    @Override
-//                                    public void onResponse(JSONObject response) {
-//                                        System.out.println(response);
-//                                    }
-//                                }, new Response.ErrorListener() {
-//                                    @Override
-//                                    public void onErrorResponse(VolleyError error) {
+//            holder.mPhotoImageView.setImageUrl(holder.mItem.getPhoto(), new ImageLoader(Volley.newRequestQueue(getApplicationContext()), new ImageLoader.ImageCache() {
+//                @Override
+//                public Bitmap getBitmap(String url) {
 //
-//                                    }
-//                                });
+//                    // Get a PlacePhotoMetadataResult containing metadata for the first 10 photos.
+//                    PlacePhotoMetadataResult result = Places.GeoDataApi
+//                            .getPlacePhotos(mGoogleApiClient, holder.mItem.getId()).await();
+//                    // Get a PhotoMetadataBuffer instance containing a list of photos (PhotoMetadata).
+//                    if (result != null && result.getStatus().isSuccess()) {
+//                        PlacePhotoMetadataBuffer photoMetadataBuffer = result.getPhotoMetadata();
+//                        // Get the first photo in the list.
+//                        PlacePhotoMetadata photo = photoMetadataBuffer.get(0);
+//                        // Get a full-size bitmap for the photo.
+//                        Bitmap image = photo.getPhoto(mGoogleApiClient).await()
+//                                .getBitmap();
+//                        // Get the attribution text.
+//                        CharSequence attribution = photo.getAttributions();
+//
+//                        System.out.println("returning image");
+//
+//                        return image;
+//                    }
+//
+//                    System.out.println("returning null");
+//
+//                    return null;
+//                }
+//
+//                @Override
+//                public void putBitmap(String url, Bitmap bitmap) {
+//
+//                }
+//            }));
 
-                                Places.GeoDataApi.getPlaceById(mGoogleApiClient, placeId).setResultCallback(new ResultCallback<PlaceBuffer>() {
-                                    @Override
-                                    public void onResult(@NonNull PlaceBuffer places) {
-                                        if (places.getStatus().isSuccess() && places.getCount() > 0) {
-                                            final Place myPlace = places.get(0);
-                                            PlaceItem placeItem = new PlaceItem();
-                                            placeItem.setId(placeId);
-                                            placeItem.setPosition(myPlace.getLatLng());
-                                            placeItem.setTitle(String.valueOf(myPlace.getName()));
-                                            placeItem.setAddress(String.valueOf(myPlace.getAddress()));
+            holder.mItemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Context context = v.getContext();
+                    Intent intent = new Intent(context, PlaceItemDetailActivity.class);
+                    intent.putExtra(PlaceItemDetailFragment.SELECTED_PLACE_ITEM, holder.getAdapterPosition());
 
-                                            mPlaceItemList.add(placeItem);
+                    context.startActivity(intent);
+                }
+            });
+        }
 
-                                            mSectionsPagerAdapter.notifyDataSetChanged();
+        @Override
+        public int getItemCount() {
+            return mPlaceItemList.size();
+        }
 
-                                            mClusterManager.addItem(placeItem);
-                                            mCircleList.add(mMap.addCircle(new CircleOptions().center(placeItem.getPosition()).visible(false)));
-                                        }
-                                        places.release();
-                                    }
-                                });
-                            }
+        public class PlaceItemViewHolder extends RecyclerView.ViewHolder {
 
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
+            public PlaceItem mItem;
 
-                }, new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                    }
-                });
+            public final CardView mItemView;
+            public ImageView imageView;
 
-                // Add the request to the RequestQueue.
-                queue.add(placeRequest);
+            // public final NetworkImageView mPhotoImageView;
+
+            public final TextView nameTextView;
+            public final TextView addressTextView;
+            public final TextView descriptionTextView;
+
+            public PlaceItemViewHolder(CardView itemView) {
+
+                super(itemView);
+
+                mItemView = itemView;
+
+                // mPhotoImageView = (NetworkImageView) itemView.findViewById(R.id.imageView);
+
+                imageView = (ImageView) findViewById(R.id.imageView);
+
+                nameTextView = (TextView) itemView.findViewById(R.id.nameTextView);
+                addressTextView = (TextView) itemView.findViewById(R.id.addressTextView);
+                descriptionTextView = (TextView) itemView.findViewById(R.id.descriptionTextView);
+
             }
         }
     }
 
-    @Override
-    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-    }
+    class PhotoTask extends AsyncTask<Object, Void, Bitmap> {
 
-    @Override
-    public void onPageSelected(int position) {
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mPlaceItemList.get(position).getPosition(), 15.0f));
-    }
+        PlaceItemRecyclerViewAdapter.PlaceItemViewHolder mHolder = null;
 
-    @Override
-    public void onPageScrollStateChanged(int state) {
-    }
-
-    public void onClickMoreInformation(View view) {
-
-        Intent intent = new Intent(getApplicationContext(), PlaceItemDetailActivity.class);
-        intent.putExtra(PlaceItemDetailFragment.SELECTED_PLACE_ITEM, mViewPager.getCurrentItem());
-
-        startActivity(intent);
-    }
-
-    /**
-     * A placeholder fragment containing a simple view.
-     */
-    public static class PlaceholderFragment extends Fragment {
-        /**
-         * The fragment argument representing the section number for this
-         * fragment.
-         */
-        private static final String PLACE_ITEM = "place_item";
-
-        public PlaceholderFragment() {
-        }
-
-        /**
-         * Returns a new instance of this fragment for the given section
-         * number.
-         */
-        public static MainActivity.PlaceholderFragment newInstance(PlaceItem placeItem) {
-            MainActivity.PlaceholderFragment fragment = new MainActivity.PlaceholderFragment();
-
-            Bundle args = new Bundle();
-            args.putSerializable(PLACE_ITEM, placeItem);
-            fragment.setArguments(args);
-            return fragment;
+        public PhotoTask(PlaceItemRecyclerViewAdapter.PlaceItemViewHolder holder) {
+            mHolder = holder;
         }
 
         @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                                 Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.place_details_fragment, container, false);
+        protected Bitmap doInBackground(Object... params) {
 
-            PlaceItem placeItem = (PlaceItem) getArguments().getSerializable(PLACE_ITEM);
+            if (params.length != 1) {
+                return null;
+            }
 
-            TextView textView = (TextView) rootView.findViewById(R.id.address);
-            textView.setText(placeItem != null ? placeItem.getAddress() : "");
+            final String placeId = (String) params[0];
+            Bitmap image = null;
 
-            ImageView favouriteView = (ImageView) rootView.findViewById(R.id.favourite);
-            favouriteView.setColorFilter(placeItem.isFavourite() ? Color.RED : Color.GRAY);
+            PlacePhotoMetadataResult result = Places.GeoDataApi
+                    .getPlacePhotos(mGoogleApiClient, placeId).await();
 
-            ImageView visitedView = (ImageView) rootView.findViewById(R.id.visited);
-            visitedView.setColorFilter(placeItem.isVisited() ? Color.GREEN : Color.GRAY);
-
-            return rootView;
-        }
-    }
-
-    /**
-     * A {@link FragmentPagerAdapter} that returns a fragment corresponding to
-     * one of the sections/tabs/pages.
-     */
-    public class SectionsPagerAdapter extends FragmentPagerAdapter {
-
-        public SectionsPagerAdapter(FragmentManager fm) {
-            super(fm);
-        }
-
-        @Override
-        public Fragment getItem(int position) {
-            // getItem is called to instantiate the fragment for the given page.
-            // Return a PlaceholderFragment (defined as a static inner class below).
-            return MainActivity.PlaceholderFragment.newInstance(mPlaceItemList.get(position));
+            if (result.getStatus().isSuccess()) {
+                PlacePhotoMetadataBuffer photoMetadata = result.getPhotoMetadata();
+                if (photoMetadata.getCount() > 0 && !isCancelled()) {
+                    // Get the first bitmap and its attributions.
+                    PlacePhotoMetadata photo = photoMetadata.get(0);
+                    CharSequence attribution = photo.getAttributions();
+                    // Load a scaled bitmap for this photo.
+                    image = photo.getPhoto(mGoogleApiClient).await()
+                            .getBitmap();
+                }
+                // Release the PlacePhotoMetadataBuffer.
+                photoMetadata.release();
+            }
+            return image;
         }
 
         @Override
-        public int getCount() {
-            return mPlaceItemList.size();
-        }
-
-        @Override
-        public CharSequence getPageTitle(int position) {
-            return mPlaceItemList.get(position).getTitle();
+        protected void onPostExecute(Bitmap bitmap) {
+            super.onPostExecute(bitmap);
+            mHolder.imageView.setImageBitmap(bitmap);
         }
     }
 }

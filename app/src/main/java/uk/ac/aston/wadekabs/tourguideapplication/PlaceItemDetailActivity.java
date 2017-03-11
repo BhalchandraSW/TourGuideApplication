@@ -13,8 +13,11 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 
+import com.google.firebase.database.FirebaseDatabase;
+
 import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceItem;
 import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceItemContent;
+import uk.ac.aston.wadekabs.tourguideapplication.model.User;
 
 /**
  * An activity representing a single PlaceItem detail screen. This
@@ -110,6 +113,11 @@ public class PlaceItemDetailActivity extends AppCompatActivity {
     public void onClickFavourite(View view) {
 
         mSelectedPlaceItem.setFavourite(!mSelectedPlaceItem.isFavourite());
+
+        if (mSelectedPlaceItem.isFavourite())
+            FirebaseDatabase.getInstance().getReference("favourites").child(User.getUser().getUid()).child(mSelectedPlaceItem.getId()).setValue(mSelectedPlaceItem.isFavourite());
+        else
+            FirebaseDatabase.getInstance().getReference("favourites").child(User.getUser().getUid()).child(mSelectedPlaceItem.getId()).removeValue();
 
         ((ImageView) view).setColorFilter(mSelectedPlaceItem.isFavourite() ? Color.RED : Color.GRAY);
     }

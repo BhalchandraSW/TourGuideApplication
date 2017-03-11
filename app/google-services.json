@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "650913170391",
+    "firebase_url": "https://tourist-guide-application.firebaseio.com",
+    "project_id": "tourist-guide-application",
+    "storage_bucket": "tourist-guide-application.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:650913170391:android:8de29ce076f336bc",
+        "android_client_info": {
+          "package_name": "uk.ac.aston.wadekabs.tourguideapplication"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "650913170391-7bcl78souo0r4jd1ecldkvd279v7j53n.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "uk.ac.aston.wadekabs.tourguideapplication",
+            "certificate_hash": "b234e7cbfed7097a6cd2f52078722f198431b3fc"
+          }
+        },
+        {
+          "client_id": "650913170391-p35hgtm059vtreeta521ck8v8nfsu8is.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCTFKEy7blwXCGqSsNjxymbARqPI4G2rpU"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "650913170391-p35hgtm059vtreeta521ck8v8nfsu8is.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

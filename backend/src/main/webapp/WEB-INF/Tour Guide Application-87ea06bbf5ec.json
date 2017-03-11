@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "tourist-guide-application",
+  "private_key_id": "87ea06bbf5ecc9c06e777286e6410bb12b505c18",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDZ5xwtNCWHhQYR\nRw1RWoVEHBfb//FXrvoV+BfJjwPqX5Xkayf/dFGEefln5qDFZDHG03SiZzNY/q0E\nzFLlukmR43JQa9rVvCoNzZ0ROQ45iX/ECH4DvRNLobuyNIbYpr0iK0eXyb2o5N6P\nQMKW6kTfwxSQpqqXanqySPiGCHQL/QlDJ8HE060jFglF3B4nGtaFtx9nByG2t/Cl\nd0SOx5r+N9YcOuoNcqaXyJsOcyiVosQxeLyAE6A0zFIJhTdSrOrQVmhJdFZ1Py26\nrRcBDj/TO7nACYHN6F6nidm5Brcs+lbyq1rPl2FdRxejnaHUYReGQiR3PrVLwVw3\nhGZhDpQ9AgMBAAECggEAHzKGhzZLFT8HYlvg3T/vipPXGqlnPV2Q8qpFhZcTQXAT\n/tMUs+9MaIIqIiUT6Y7xzXyi20mZQWmdDe3PBJMKS3fb+wWmHCnHf5hrn3aiwbwc\n7c0ldZWReKecPuRkVgpxU74Mjv/URqUV9D6aXY8G815zyE4EaI9XJ8Vox4/YRYre\nI7qDAzZKKlaEDtVsnhO0bGJ5oPgCAzUQ3SXx9VAo5U1MtTKAJSsh+UMB9dcHH9sA\nGC0ICmS8J9/gFGiF7xDpee7Pmc0eFIMolJrVtBsGpw1Zl/sfJxsyGfjeD72tjss6\nBMww3m29cPi7as+t4R/3VdwYshu1C2QaOkwUTRcLpQKBgQD2CWINVC4ihH3MnIUv\n88E3syhwM6h9z/Tlwv6YEKmzyDya8ohMECC2VhzipPIHlO7gGAvNTxM0ghTv2yIq\n/7gkY3SCri8rQiRhFTj3Y9sG13Sk1nD0B23MShxhNPlnDPU20Rjf/U7I9fGAF+v9\nhd3rN4jjFuREaRic8KYuaW2yEwKBgQDiuhF6VX3Oe8Myjp2w9obQuKsPCPsxXCID\nmBoiS5Wy5WGEKN+gGXEQoZKIH+vjyDIGAfxUdKup3D2ldEw62noYHbK8lTiRKvDA\nz9A5ShMy0LlzHOx5TnoaLVPuvtPYlW0iiAr46Ie7jXHK2dS1nBVRTvwVorILMpF1\nIxBZYoPqbwKBgQCw8eyXw2vunTTQG91ZsEfMpEe38h8CZLYvK/7oJEu4JZEYqsbF\nVXABUosxoQkD1OO7PO/39x/LyqX+Hq5DGGg5m2Fmvpjj1ozNWXL/0Mvr7rZP+n1/\ns3wOyVoBuxSHPXV5uAXYyZeIxgCqbAnn6gfBK86B66u9W4w9CoGprV8cCwKBgQCe\nsDj3dMrfMMSIqEU6zPHDON2RYmnePGwaM+Vmx5x5YA8G30zV07jNOSlEWYNTJJXO\nmqkvu5FDDEGhgmqwbqYyJucpExBKmtFzQoCs+GnDkU+bgE0LAqB3ne43Fh1UZBHE\nr49uc+I8pV1V62zzx9Er3aqWwg73w2cHo4kX5toJxQKBgQC8GaJV1wxoj13bLPbM\n0NC0hDY57fHnuwkPEOa8fJ2IlkmIz/6RsZNohDo17k+tI8osZeUnHFXVPXs7WOFg\nqQcXQKFwU4uDf7o13bemXrGU/HOTCsDHVKRxUEO+sWq9Aoyo3O+FItMVQRP5EwFi\nIQ1GeS3BtHBONd3LiAn8CgqPow==\n-----END PRIVATE KEY-----\n",
+  "client_email": "nearby-places-servlet@tourist-guide-application.iam.gserviceaccount.com",
+  "client_id": "105654339843039011307",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://accounts.google.com/o/oauth2/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/nearby-places-servlet%40tourist-guide-application.iam.gserviceaccount.com"
+}

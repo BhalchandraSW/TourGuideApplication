@@ -17,19 +17,30 @@
         android:layout_height="wrap_content"
         android:layout_weight="0" />
 
-    <fragment xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:tools="http://schemas.android.com/tools"
-        android:id="@+id/map"
-        android:name="com.google.android.gms.maps.SupportMapFragment"
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        tools:context=".MainActivity" />
+        android:layout_weight="1">
 
-    <android.support.v4.view.ViewPager
-        android:id="@+id/place_details_container"
-        android:layout_width="match_parent"
-        android:layout_height="96dp"
-        android:layout_weight="0" />
+        <fragment xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:tools="http://schemas.android.com/tools"
+            android:id="@+id/map"
+            android:name="com.google.android.gms.maps.SupportMapFragment"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            tools:context=".MainActivity" />
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/placeitem_card_list"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:orientation="horizontal"
+            android:padding="4dp"
+            app:layoutManager="LinearLayoutManager"
+            tools:listitem="@layout/placeitem_card" />
+
+    </RelativeLayout>
 
 </LinearLayout>

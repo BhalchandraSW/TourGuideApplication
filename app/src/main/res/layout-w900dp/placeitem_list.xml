@@ -23,11 +23,9 @@
         android:name="uk.ac.aston.wadekabs.tourguideapplication.PlaceItemListFragment"
         android:layout_width="@dimen/item_width"
         android:layout_height="match_parent"
-        android:layout_marginLeft="16dp"
-        android:layout_marginRight="16dp"
         app:layoutManager="LinearLayoutManager"
-        tools:context="uk.ac.aston.wadekabs.tourguideapplication.PlaceItemListActivity"
-        tools:listitem="@layout/placeitem_list_content" />
+        tools:context=".PlaceItemListActivity"
+        tools:listitem="@layout/placeitem_card" />
 
     <FrameLayout
         android:id="@+id/placeitem_detail_container"

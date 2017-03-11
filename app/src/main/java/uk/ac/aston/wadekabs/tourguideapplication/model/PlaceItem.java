@@ -12,11 +12,13 @@ import java.io.Serializable;
 public class PlaceItem implements ClusterItem, Serializable {
 
     private String id;
-    private double lat, lng;
-    private String title;
+    private PlaceLocation location;
+    private String name;
+    private SupportedPlaceTypes types;
     private String address;
     private boolean favourite = false;
     private boolean visited = false;
+    private String photo = "";
 
     public String getId() {
         return id;
@@ -28,21 +30,12 @@ public class PlaceItem implements ClusterItem, Serializable {
 
     @Override
     public LatLng getPosition() {
-        return new LatLng(lat, lng);
-    }
-
-    public void setPosition(LatLng position) {
-        this.lat = position.latitude;
-        this.lng = position.longitude;
+        return new LatLng(location.getLat(), location.getLng());
     }
 
     @Override
     public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
+        return getName();
     }
 
     @Override
@@ -77,5 +70,42 @@ public class PlaceItem implements ClusterItem, Serializable {
 
     public void setVisited(boolean visited) {
         this.visited = visited;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public SupportedPlaceTypes getTypes() {
+        return types;
+    }
+
+    public void setTypes(SupportedPlaceTypes types) {
+        this.types = types;
+    }
+
+    @Override
+    public String toString() {
+        return getTitle();
+    }
+
+    public PlaceLocation getLocation() {
+        return location;
+    }
+
+    public void setLocation(PlaceLocation location) {
+        this.location = location;
+    }
+
+    public String getPhoto() {
+        return photo;
+    }
+
+    public void setPhoto(String photo) {
+        this.photo = photo;
     }
 }

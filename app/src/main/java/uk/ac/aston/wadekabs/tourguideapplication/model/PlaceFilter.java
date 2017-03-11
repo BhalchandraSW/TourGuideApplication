@@ -22,7 +22,6 @@ public class PlaceFilter {
         mPlaceTypes.add("art_gallery");
         mPlaceTypes.add("museum");
         mPlaceTypes.add("restaurant");
-        // mPlaceTypes.add("parking");
     }
 
     public static synchronized PlaceFilter getInstance() {
