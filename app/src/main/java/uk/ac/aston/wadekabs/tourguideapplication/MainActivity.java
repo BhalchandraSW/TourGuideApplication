@@ -1,36 +1,25 @@
 package uk.ac.aston.wadekabs.tourguideapplication;
 
 import android.app.FragmentTransaction;
-import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
 import android.location.Location;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.GravityCompat;
-import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.CardView;
 import android.support.v7.widget.PagerSnapHelper;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.SnapHelper;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.TextView;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -44,9 +33,6 @@ import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStates;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
-import com.google.android.gms.location.places.PlacePhotoMetadata;
-import com.google.android.gms.location.places.PlacePhotoMetadataBuffer;
-import com.google.android.gms.location.places.PlacePhotoMetadataResult;
 import com.google.android.gms.location.places.Places;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -70,7 +56,6 @@ import java.util.List;
 
 import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceItem;
 import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceItemContent;
-import uk.ac.aston.wadekabs.tourguideapplication.model.SupportedPlaceTypes;
 import uk.ac.aston.wadekabs.tourguideapplication.model.User;
 
 
@@ -86,25 +71,29 @@ public class MainActivity extends AppCompatActivity
     private GoogleApiClient mGoogleApiClient;
     private FilterPreferenceFragment mFilterPreferenceFragment;
 
-    private Location mCurrentLocation;
     private LocationRequest mLocationRequest;
 
     private ClusterManager<PlaceItem> mClusterManager;
-
-    private List<PlaceItem> mPlaceItemList = new ArrayList<>();
 
     private List<Circle> mCircleList = new ArrayList<>();
 
     private RecyclerView mRecyclerView;
     private PlaceItemRecyclerViewAdapter mPlaceItemRecyclerViewAdapter;
 
-    private ViewPager mPhotosViewPager;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // Kick off the process of building a GoogleApiClient and requesting the LocationServices
+        // API.
+        buildGoogleApiClient();
+
+        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -118,43 +107,25 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        TextView userNameTextView = (TextView) navigationView.findViewById(R.id.userNameTextView);
-        if (userNameTextView != null)
-            userNameTextView.setText(User.getUser().getDisplayName());
+        // TODO: Show logged in user's username and email in navigation drawer
 
-        TextView userEmailTextView = (TextView) navigationView.findViewById(R.id.userEmailTextView);
-        if (userEmailTextView != null)
-            userEmailTextView.setText(User.getUser().getEmail());
-
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
+//        TextView userNameTextView = (TextView) navigationView.findViewById(R.id.userNameTextView);
+//        if (userNameTextView != null)
+//            userNameTextView.setText(User.getUser().getDisplayName());
+//
+//        TextView userEmailTextView = (TextView) navigationView.findViewById(R.id.userEmailTextView);
+//        if (userEmailTextView != null)
+//            userEmailTextView.setText(User.getUser().getEmail());
 
         mFilterPreferenceFragment = (FilterPreferenceFragment) getFragmentManager().findFragmentById(R.id.filter);
         getFragmentManager().beginTransaction().hide(mFilterPreferenceFragment).commit();
 
-        // Create an instance of GoogleAPIClient.
-        if (mGoogleApiClient == null) {
-            mGoogleApiClient = new GoogleApiClient.Builder(this)
-                    .addConnectionCallbacks(this)
-                    .addApi(LocationServices.API)
-                    .addApi(Places.GEO_DATA_API)
-                    .enableAutoManage(this, this)
-                    .build();
-        }
-
-        createLocationRequest();
-
-        mPlaceItemRecyclerViewAdapter = new PlaceItemRecyclerViewAdapter(PlaceItemContent.getInstance().getPlaceItemList());
+        mPlaceItemRecyclerViewAdapter = new PlaceItemRecyclerViewAdapter(PlaceItemContent.getInstance().getPlaceItemList(), mGoogleApiClient);
         mRecyclerView = (RecyclerView) findViewById(R.id.placeitem_card_list);
         mRecyclerView.setHasFixedSize(true);
         mRecyclerView.setAdapter(mPlaceItemRecyclerViewAdapter);
 
-        SnapHelper snapHelper = new PagerSnapHelper();
-        snapHelper.attachToRecyclerView(mRecyclerView);
-
-        mPlaceItemList = PlaceItemContent.getInstance().getPlaceItemList();
+        new PagerSnapHelper().attachToRecyclerView(mRecyclerView);
 
         final DatabaseReference placeDetailsReference = FirebaseDatabase.getInstance().getReference("placeDetails");
 
@@ -167,9 +138,8 @@ public class MainActivity extends AppCompatActivity
                     public void onDataChange(DataSnapshot dataSnapshot) {
 
                         PlaceItem placeItem = dataSnapshot.getValue(PlaceItem.class);
-                        SupportedPlaceTypes types = placeItem.getTypes();
 
-                        if (types.isRestaurant() || types.isFood()) {
+                        if (placeItem != null) {
 
                             placeItem.setId(dataSnapshot.getKey());
                             PlaceItemContent.getInstance().getPlaceItemList().add(placeItem);
@@ -177,6 +147,10 @@ public class MainActivity extends AppCompatActivity
 
                             mClusterManager.addItem(placeItem);
                             mCircleList.add(mMap.addCircle(new CircleOptions().center(placeItem.getPosition()).visible(false)));
+
+                            if (PlaceItemContent.getInstance().getPlaceItemList().size() == 1) {
+                                animateToFirstPlace();
+                            }
                         }
                     }
 
@@ -206,6 +180,28 @@ public class MainActivity extends AppCompatActivity
             public void onCancelled(DatabaseError databaseError) {
             }
         });
+
+    }
+
+    /**
+     * Builds a GoogleApiClient. Uses the {@code #addApi} method to request the
+     * LocationServices API.
+     */
+    protected synchronized void buildGoogleApiClient() {
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addApi(LocationServices.API)
+                .addApi(Places.GEO_DATA_API)
+                .enableAutoManage(this, this)
+                .addConnectionCallbacks(this)
+                .build();
+        createLocationRequest();
+    }
+
+    protected void createLocationRequest() {
+        mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(10000);
+        mLocationRequest.setFastestInterval(5000);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
     }
 
     @Override
@@ -230,6 +226,12 @@ public class MainActivity extends AppCompatActivity
         super.onResume();
         if (mGoogleApiClient.isConnected())
             startLocationUpdates();
+    }
+
+    private void animateToFirstPlace() {
+        if (mMap != null && PlaceItemContent.getInstance().getPlaceItemList().size() > 0) {
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(PlaceItemContent.getInstance().getPlaceItemList().get(0).getPosition(), 15.0f));
+        }
     }
 
     @Override
@@ -293,28 +295,16 @@ public class MainActivity extends AppCompatActivity
 
         mMap = googleMap;
 
-        mRecyclerView.addOnChildAttachStateChangeListener(new RecyclerView.OnChildAttachStateChangeListener() {
-
-            @Override
-            public void onChildViewAttachedToWindow(View view) {
-                mMap.setPadding(0, 0, 0, mRecyclerView.getMeasuredHeight());
-            }
-
-            @Override
-            public void onChildViewDetachedFromWindow(View view) {
-
-            }
-        });
-
         mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+
                 super.onScrolled(recyclerView, dx, dy);
 
-                int i = recyclerView.computeHorizontalScrollOffset() / (recyclerView.getMeasuredWidth() / mPlaceItemList.size()) / 4;
+                mMap.setPadding(0, 0, 0, recyclerView.getMeasuredHeight());
 
-                if (0 <= i && i < mPlaceItemList.size())
-                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(mPlaceItemList.get(i).getPosition(), 15.0f));
+                int i = recyclerView.computeHorizontalScrollOffset() / (recyclerView.computeHorizontalScrollRange() / PlaceItemContent.getInstance().getPlaceItemList().size());
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(PlaceItemContent.getInstance().getPlaceItemList().get(i).getPosition(), 15.0f));
             }
         });
 
@@ -329,9 +319,9 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onCameraMove() {
 
-                for (Circle circle : mCircleList) {
+                VisibleRegion region = mMap.getProjection().getVisibleRegion();
 
-                    VisibleRegion region = mMap.getProjection().getVisibleRegion();
+                for (Circle circle : mCircleList) {
 
                     if (region.latLngBounds.contains(circle.getCenter())) {
                         circle.setVisible(false);
@@ -348,9 +338,9 @@ public class MainActivity extends AppCompatActivity
                         double maximumRadius = nearLeftLocation.distanceTo(nearRightLocation);
                         double minimumRadius = maximumRadius / 2;
 
-                        Location markerLocation = new Location("");
-                        markerLocation.setLatitude(circle.getCenter().latitude);
-                        markerLocation.setLongitude(circle.getCenter().longitude);
+                        Location circleLocation = new Location("");
+                        circleLocation.setLatitude(circle.getCenter().latitude);
+                        circleLocation.setLongitude(circle.getCenter().longitude);
 
                         LatLng currentTarget = mMap.getCameraPosition().target;
 
@@ -358,11 +348,11 @@ public class MainActivity extends AppCompatActivity
                         currentTargetLocation.setLatitude(currentTarget.latitude);
                         currentTargetLocation.setLongitude(currentTarget.longitude);
 
-                        double radius = markerLocation.distanceTo(currentTargetLocation);
+                        double radius = circleLocation.distanceTo(currentTargetLocation);
 
                         if (minimumRadius <= radius && radius <= maximumRadius) {
                             circle.setVisible(true);
-                            circle.setRadius(radius);
+                            circle.setRadius(radius * .6);
                         } else {
                             circle.setVisible(false);
                         }
@@ -375,13 +365,15 @@ public class MainActivity extends AppCompatActivity
             @Override
             public boolean onClusterItemClick(PlaceItem selectedPlaceItem) {
                 // TODO: Make sure this is synced with correct place item list.
-                mRecyclerView.smoothScrollToPosition(mPlaceItemList.indexOf(selectedPlaceItem));
+                mRecyclerView.smoothScrollToPosition(PlaceItemContent.getInstance().getPlaceItemList().indexOf(selectedPlaceItem));
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(selectedPlaceItem.getPosition(), 15.0f));
                 return true;
             }
         });
 
         onAccessFineLocationPermissionGranted();
+
+        animateToFirstPlace();
     }
 
     private void onAccessFineLocationPermissionGranted() {
@@ -415,8 +407,6 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
-
-        createLocationRequest();
 
         LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
                 .addLocationRequest(mLocationRequest);
@@ -488,165 +478,10 @@ public class MainActivity extends AppCompatActivity
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
     }
 
-    protected void createLocationRequest() {
-        mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(10000);
-        mLocationRequest.setFastestInterval(5000);
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-    }
 
     @Override
     public void onLocationChanged(Location location) {
         FirebaseDatabase.getInstance().getReference("locations").child(User.getUser().getUid()).child("lat").setValue(location.getLatitude());
         FirebaseDatabase.getInstance().getReference("locations").child(User.getUser().getUid()).child("lng").setValue(location.getLongitude());
-    }
-
-    public class PlaceItemRecyclerViewAdapter extends RecyclerView.Adapter<PlaceItemRecyclerViewAdapter.PlaceItemViewHolder> {
-
-        private List<PlaceItem> mPlaceItemList;
-
-        public PlaceItemRecyclerViewAdapter(List<PlaceItem> placeItemList) {
-            mPlaceItemList = placeItemList;
-        }
-
-        @Override
-        public PlaceItemViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            CardView view = (CardView) LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.placeitem_card, parent, false);
-            return new PlaceItemViewHolder(view);
-        }
-
-        @Override
-        public void onBindViewHolder(final PlaceItemViewHolder holder, int position) {
-            holder.mItem = PlaceItemContent.getInstance().getPlaceItemList().get(position);
-            holder.nameTextView.setText(holder.mItem.getTitle());
-            holder.addressTextView.setText(holder.mItem.getAddress());
-
-            new PhotoTask(holder).execute(holder.mItem.getId());
-
-//            holder.mPhotoImageView.setImageUrl(holder.mItem.getPhoto(), new ImageLoader(Volley.newRequestQueue(getApplicationContext()), new ImageLoader.ImageCache() {
-//                @Override
-//                public Bitmap getBitmap(String url) {
-//
-//                    // Get a PlacePhotoMetadataResult containing metadata for the first 10 photos.
-//                    PlacePhotoMetadataResult result = Places.GeoDataApi
-//                            .getPlacePhotos(mGoogleApiClient, holder.mItem.getId()).await();
-//                    // Get a PhotoMetadataBuffer instance containing a list of photos (PhotoMetadata).
-//                    if (result != null && result.getStatus().isSuccess()) {
-//                        PlacePhotoMetadataBuffer photoMetadataBuffer = result.getPhotoMetadata();
-//                        // Get the first photo in the list.
-//                        PlacePhotoMetadata photo = photoMetadataBuffer.get(0);
-//                        // Get a full-size bitmap for the photo.
-//                        Bitmap image = photo.getPhoto(mGoogleApiClient).await()
-//                                .getBitmap();
-//                        // Get the attribution text.
-//                        CharSequence attribution = photo.getAttributions();
-//
-//                        System.out.println("returning image");
-//
-//                        return image;
-//                    }
-//
-//                    System.out.println("returning null");
-//
-//                    return null;
-//                }
-//
-//                @Override
-//                public void putBitmap(String url, Bitmap bitmap) {
-//
-//                }
-//            }));
-
-            holder.mItemView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Context context = v.getContext();
-                    Intent intent = new Intent(context, PlaceItemDetailActivity.class);
-                    intent.putExtra(PlaceItemDetailFragment.SELECTED_PLACE_ITEM, holder.getAdapterPosition());
-
-                    context.startActivity(intent);
-                }
-            });
-        }
-
-        @Override
-        public int getItemCount() {
-            return mPlaceItemList.size();
-        }
-
-        public class PlaceItemViewHolder extends RecyclerView.ViewHolder {
-
-            public PlaceItem mItem;
-
-            public final CardView mItemView;
-            public ImageView imageView;
-
-            // public final NetworkImageView mPhotoImageView;
-
-            public final TextView nameTextView;
-            public final TextView addressTextView;
-            public final TextView descriptionTextView;
-
-            public PlaceItemViewHolder(CardView itemView) {
-
-                super(itemView);
-
-                mItemView = itemView;
-
-                // mPhotoImageView = (NetworkImageView) itemView.findViewById(R.id.imageView);
-
-                imageView = (ImageView) findViewById(R.id.imageView);
-
-                nameTextView = (TextView) itemView.findViewById(R.id.nameTextView);
-                addressTextView = (TextView) itemView.findViewById(R.id.addressTextView);
-                descriptionTextView = (TextView) itemView.findViewById(R.id.descriptionTextView);
-
-            }
-        }
-    }
-
-    class PhotoTask extends AsyncTask<Object, Void, Bitmap> {
-
-        PlaceItemRecyclerViewAdapter.PlaceItemViewHolder mHolder = null;
-
-        public PhotoTask(PlaceItemRecyclerViewAdapter.PlaceItemViewHolder holder) {
-            mHolder = holder;
-        }
-
-        @Override
-        protected Bitmap doInBackground(Object... params) {
-
-            if (params.length != 1) {
-                return null;
-            }
-
-            final String placeId = (String) params[0];
-            Bitmap image = null;
-
-            PlacePhotoMetadataResult result = Places.GeoDataApi
-                    .getPlacePhotos(mGoogleApiClient, placeId).await();
-
-            if (result.getStatus().isSuccess()) {
-                PlacePhotoMetadataBuffer photoMetadata = result.getPhotoMetadata();
-                if (photoMetadata.getCount() > 0 && !isCancelled()) {
-                    // Get the first bitmap and its attributions.
-                    PlacePhotoMetadata photo = photoMetadata.get(0);
-                    CharSequence attribution = photo.getAttributions();
-                    // Load a scaled bitmap for this photo.
-                    image = photo.getPhoto(mGoogleApiClient).await()
-                            .getBitmap();
-                }
-                // Release the PlacePhotoMetadataBuffer.
-                photoMetadata.release();
-            }
-            return image;
-        }
-
-        @Override
-        protected void onPostExecute(Bitmap bitmap) {
-            super.onPostExecute(bitmap);
-            mHolder.imageView.setImageBitmap(bitmap);
-        }
     }
 }

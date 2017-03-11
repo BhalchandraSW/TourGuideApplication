@@ -14,19 +14,15 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.google.firebase.database.ChildEventListener;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.places.Places;
 
 import java.util.List;
 
 import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceItem;
 import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceItemContent;
-import uk.ac.aston.wadekabs.tourguideapplication.model.User;
 
 /**
  * An activity representing a list of PlaceItems. This activity
@@ -36,18 +32,21 @@ import uk.ac.aston.wadekabs.tourguideapplication.model.User;
  * item details. On tablets, the activity presents the list of items and
  * item details side-by-side using two vertical panes.
  */
-public class PlaceItemListActivity extends AppCompatActivity {
+public class PlaceItemListActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener {
 
     /**
      * Whether or not the activity is in two-pane mode, i.e. running on a tablet
      * device.
      */
     private boolean mTwoPane;
+    private GoogleApiClient mGoogleApiClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_placeitem_list);
+
+        buildGoogleApiClient();
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -89,38 +88,24 @@ public class PlaceItemListActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    /**
+     * Builds a GoogleApiClient. Uses the {@code #addApi} method to request the
+     * LocationServices API.
+     */
+    protected synchronized void buildGoogleApiClient() {
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addApi(Places.GEO_DATA_API)
+                .enableAutoManage(this, this)
+                .build();
+    }
+
     private void setupRecyclerView(@NonNull RecyclerView recyclerView) {
+        recyclerView.setAdapter(new PlaceItemRecyclerViewAdapter(PlaceItemContent.getInstance().getPlaceItemList(), mGoogleApiClient));
+    }
 
-        DatabaseReference database = FirebaseDatabase.getInstance().getReference();
-        database.child("favourites").child(User.getUser().getUid()).addChildEventListener(new ChildEventListener() {
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
 
-            @Override
-            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                Toast.makeText(getApplicationContext(), dataSnapshot.getKey(), Toast.LENGTH_LONG).show();
-            }
-
-            @Override
-            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-
-            }
-
-            @Override
-            public void onChildRemoved(DataSnapshot dataSnapshot) {
-
-            }
-
-            @Override
-            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-
-        recyclerView.setAdapter(new SimpleItemRecyclerViewAdapter(PlaceItemContent.getInstance().getPlaceItemList()));
     }
 
     public class SimpleItemRecyclerViewAdapter
