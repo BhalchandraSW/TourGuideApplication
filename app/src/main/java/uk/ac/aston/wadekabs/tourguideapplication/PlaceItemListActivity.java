@@ -1,7 +1,5 @@
 package uk.ac.aston.wadekabs.tourguideapplication;
 
-import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NavUtils;
@@ -9,19 +7,13 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.TextView;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.places.Places;
 
-import java.util.List;
-
-import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceItem;
 import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceItemContent;
 
 /**
@@ -106,81 +98,5 @@ public class PlaceItemListActivity extends AppCompatActivity implements GoogleAp
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
 
-    }
-
-    public class SimpleItemRecyclerViewAdapter
-            extends RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.ViewHolder> {
-
-        private final List<PlaceItem> mValues;
-
-        public SimpleItemRecyclerViewAdapter(List<PlaceItem> items) {
-            mValues = items;
-        }
-
-        @Override
-        public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.placeitem_card, parent, false);
-            return new ViewHolder(view);
-        }
-
-        @Override
-        public void onBindViewHolder(final ViewHolder holder, final int position) {
-
-//            holder.mItem = mValues.get(position);
-//            holder.mIdView.setText(mValues.get(position).getId());
-//            holder.mContentView.setText(mValues.get(position).getAddress());
-
-            holder.mItem = PlaceItemContent.getInstance().getPlaceItemList().get(position);
-            holder.nameTextView.setText(holder.mItem.getTitle());
-            holder.addressTextView.setText(holder.mItem.getAddress());
-
-            holder.mItemView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (mTwoPane) {
-                        Bundle arguments = new Bundle();
-                        arguments.putInt(PlaceItemDetailFragment.SELECTED_PLACE_ITEM, holder.getAdapterPosition());
-                        PlaceItemDetailFragment fragment = new PlaceItemDetailFragment();
-                        fragment.setArguments(arguments);
-                        getSupportFragmentManager().beginTransaction()
-                                .replace(R.id.placeitem_detail_container, fragment)
-                                .commit();
-                    } else {
-                        Context context = v.getContext();
-                        Intent intent = new Intent(context, PlaceItemDetailActivity.class);
-                        intent.putExtra(PlaceItemDetailFragment.SELECTED_PLACE_ITEM, holder.getAdapterPosition());
-
-                        context.startActivity(intent);
-                    }
-                }
-            });
-        }
-
-        @Override
-        public int getItemCount() {
-            return mValues.size();
-        }
-
-        public class ViewHolder extends RecyclerView.ViewHolder {
-
-            public PlaceItem mItem;
-            public final View mItemView;
-
-            public TextView nameTextView;
-            public TextView addressTextView;
-            public TextView descriptionTextView;
-
-            public ViewHolder(View itemView) {
-
-                super(itemView);
-
-                mItemView = itemView;
-
-                nameTextView = (TextView) itemView.findViewById(R.id.nameTextView);
-                addressTextView = (TextView) itemView.findViewById(R.id.addressTextView);
-                descriptionTextView = (TextView) itemView.findViewById(R.id.descriptionTextView);
-            }
-        }
     }
 }
