@@ -27,7 +27,7 @@ dependencies {
     compile 'com.google.firebase:firebase-server-sdk:3.0.3'
     compile 'org.apache.httpcomponents:httpclient:4.5.3'
     compile 'com.google.appengine:appengine-api-1.0-sdk:1.9.50'
-    compile project(':google-maps-services-java')
+    compile 'com.google.maps:google-maps-services:0.1.17'
 }
 
 appengine {

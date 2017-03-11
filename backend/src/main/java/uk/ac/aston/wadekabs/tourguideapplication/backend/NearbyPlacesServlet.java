@@ -9,7 +9,6 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.maps.GaeRequestHandler;
 import com.google.maps.GeoApiContext;
-import com.google.maps.NearbySearchRequest;
 import com.google.maps.PlacesApi;
 import com.google.maps.model.LatLng;
 import com.google.maps.model.PlacesSearchResponse;
@@ -37,7 +36,7 @@ import uk.ac.aston.wadekabs.tourguideapplication.backend.model.PlaceLocation;
 public class NearbyPlacesServlet extends HttpServlet {
 
     private static final Logger LOG = Logger.getLogger(NearbyPlacesServlet.class.getName());
-    private static GeoApiContext sContext = new GeoApiContext(new GaeRequestHandler()).setApiKey("AIzaSyCpbB9sM5IyFaG9OsW8MfuEahPnWxHTTEA");
+    private static GeoApiContext sContext = new GeoApiContext(new GaeRequestHandler()).setApiKey("AIzaSyBBbAEy4Frv3KMlfe75T82HMW8QtRhU0fQ");
 
     @Override
     protected void doGet(final HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {
@@ -68,53 +67,42 @@ public class NearbyPlacesServlet extends HttpServlet {
             @Override
             public void onChildAdded(final DataSnapshot userLocationSnapshot, String s) {
 
-//                GeocodingResult[] results = new GeocodingResult[0];
-//                try {
-//                    results = GeocodingApi.geocode(sContext,
-//                            "1600 Amphitheatre Parkway Mountain View, CA 94043").await();
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                }
-//                System.out.println(results[0].formattedAddress);
-
                 PlaceLocation location = userLocationSnapshot.getValue(PlaceLocation.class);
 
-                NearbySearchRequest request = PlacesApi.nearbySearchQuery(sContext, new LatLng(location.getLat(), location.getLng()));
-
+                // First try with google maps services java library
                 PlacesSearchResponse response;
                 try {
-                    response = request.await();
-                    LOG.info(response.toString());
+                    response = PlacesApi.nearbySearchQuery(sContext, new LatLng(location.getLat(), location.getLng())).await();
                     for (PlacesSearchResult result : response.results) {
                         reference.child("nearbyPlaces").child(userLocationSnapshot.getKey()).child(result.placeId).setValue(true);
                     }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    LOG.severe(e.getMessage());
+                    return;
+                } catch (Exception ignored) {
+                    ignored.printStackTrace();
                 }
 
+                // Next, try with URL.openStream() and org.json parsing
+                URL url;
+                try {
 
-//                URL url;
-//                try {
-//
-//                    url = new URL("https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=AIzaSyCpbB9sM5IyFaG9OsW8MfuEahPnWxHTTEA&location=" + location.getLat() + "," + location.getLng() + "&radius=50000");
-//
-//                    InputStream is = url.openStream();
-//
-//                    byte[] b = new byte[is.available()];
-//                    is.read(b);
-//
-//                    JSONObject result = new JSONObject(new String(b));
-//                    JSONArray placesArray = result.getJSONArray("results");
-//
-//                    for (Object object : placesArray) {
-//                        JSONObject place = (JSONObject) object;
-//                        reference.child("nearbyPlaces").child(userLocationSnapshot.getKey()).child(place.getString("place_id")).setValue(true);
-//                    }
-//
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
+                    url = new URL("https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=AIzaSyCpbB9sM5IyFaG9OsW8MfuEahPnWxHTTEA&location=" + location.getLat() + "," + location.getLng() + "&radius=50000");
+
+                    InputStream is = url.openStream();
+
+                    byte[] b = new byte[is.available()];
+                    is.read(b);
+
+                    JSONObject result = new JSONObject(new String(b));
+                    JSONArray placesArray = result.getJSONArray("results");
+
+                    for (Object object : placesArray) {
+                        JSONObject place = (JSONObject) object;
+                        reference.child("nearbyPlaces").child(userLocationSnapshot.getKey()).child(place.getString("place_id")).setValue(true);
+                    }
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
 
             @Override
@@ -148,7 +136,7 @@ public class NearbyPlacesServlet extends HttpServlet {
 
             @Override
             public void onChildRemoved(DataSnapshot dataSnapshot) {
-
+                FirebaseDatabase.getInstance().getReference("nearbyPlaces").child(dataSnapshot.getKey()).removeValue();
             }
 
             @Override

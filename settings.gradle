@@ -1,1 +1,1 @@
-include ':app', ':backend', ':google-maps-services-java'
+include ':app', ':backend'
