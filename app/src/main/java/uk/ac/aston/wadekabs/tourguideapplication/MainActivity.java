@@ -17,7 +17,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.PagerSnapHelper;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -31,7 +30,6 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
-import com.google.android.gms.location.LocationSettingsStates;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.location.places.Places;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -43,16 +41,13 @@ import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.VisibleRegion;
-import com.google.firebase.database.ChildEventListener;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 import com.google.maps.android.clustering.ClusterManager;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Observable;
+import java.util.Observer;
 
 import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceItem;
 import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceItemContent;
@@ -62,7 +57,7 @@ import uk.ac.aston.wadekabs.tourguideapplication.model.User;
 // TODO: When internet is not available
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
+        implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener, Observer {
 
     private static final int REQUEST_CODE_ACCESS_FINE_LOCATION = 1;
     private static final int REQUEST_CHECK_SETTINGS = 2;
@@ -120,67 +115,14 @@ public class MainActivity extends AppCompatActivity
         mFilterPreferenceFragment = (FilterPreferenceFragment) getFragmentManager().findFragmentById(R.id.filter);
         getFragmentManager().beginTransaction().hide(mFilterPreferenceFragment).commit();
 
-        mPlaceItemRecyclerViewAdapter = new PlaceItemRecyclerViewAdapter(PlaceItemContent.getInstance().getPlaceItemList(), mGoogleApiClient);
+        mPlaceItemRecyclerViewAdapter = new PlaceItemRecyclerViewAdapter(PlaceItemContent.nearby(), mGoogleApiClient);
         mRecyclerView = (RecyclerView) findViewById(R.id.placeitem_card_list);
         mRecyclerView.setHasFixedSize(true);
         mRecyclerView.setAdapter(mPlaceItemRecyclerViewAdapter);
 
         new PagerSnapHelper().attachToRecyclerView(mRecyclerView);
 
-        final DatabaseReference placeDetailsReference = FirebaseDatabase.getInstance().getReference("placeDetails");
-
-        FirebaseDatabase.getInstance().getReference("nearbyPlaces").child(User.getUser().getUid()).addChildEventListener(new ChildEventListener() {
-            @Override
-            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-
-                placeDetailsReference.child(dataSnapshot.getKey()).addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-
-                        PlaceItem placeItem = dataSnapshot.getValue(PlaceItem.class);
-
-                        if (placeItem != null) {
-
-                            placeItem.setId(dataSnapshot.getKey());
-                            PlaceItemContent.getInstance().getPlaceItemList().add(placeItem);
-                            mPlaceItemRecyclerViewAdapter.notifyDataSetChanged();
-
-                            mClusterManager.addItem(placeItem);
-                            mCircleList.add(mMap.addCircle(new CircleOptions().center(placeItem.getPosition()).visible(false)));
-
-                            if (PlaceItemContent.getInstance().getPlaceItemList().size() == 1) {
-                                animateToFirstPlace();
-                            }
-                        }
-                    }
-
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-                        Log.e("MainActivity", databaseError.getMessage() + databaseError.getDetails());
-                    }
-                });
-
-            }
-
-            @Override
-            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-
-            }
-
-            @Override
-            public void onChildRemoved(DataSnapshot dataSnapshot) {
-
-            }
-
-            @Override
-            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-            }
-        });
-
+        PlaceItemContent.addNearbyObserver(this);
     }
 
     /**
@@ -229,8 +171,8 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void animateToFirstPlace() {
-        if (mMap != null && PlaceItemContent.getInstance().getPlaceItemList().size() > 0) {
-            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(PlaceItemContent.getInstance().getPlaceItemList().get(0).getPosition(), 15.0f));
+        if (mMap != null && PlaceItemContent.nearby().size() > 0) {
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(PlaceItemContent.nearby().get(0).getPosition(), 15.0f));
         }
     }
 
@@ -248,7 +190,6 @@ public class MainActivity extends AppCompatActivity
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
         if (id == R.id.action_filter) {
 
             // Toggle filter preference fragment's visibility
@@ -303,8 +244,8 @@ public class MainActivity extends AppCompatActivity
 
                 mMap.setPadding(0, 0, 0, recyclerView.getMeasuredHeight());
 
-                int i = recyclerView.computeHorizontalScrollOffset() / (recyclerView.computeHorizontalScrollRange() / PlaceItemContent.getInstance().getPlaceItemList().size());
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(PlaceItemContent.getInstance().getPlaceItemList().get(i).getPosition(), 15.0f));
+                int i = recyclerView.computeHorizontalScrollOffset() / (recyclerView.computeHorizontalScrollRange() / PlaceItemContent.nearby().size());
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(PlaceItemContent.nearby().get(i).getPosition(), 15.0f));
             }
         });
 
@@ -312,52 +253,14 @@ public class MainActivity extends AppCompatActivity
         uiSettings.setMapToolbarEnabled(false);
 
         mClusterManager = new ClusterManager<>(getApplicationContext(), mMap);
+
         mMap.setOnCameraIdleListener(mClusterManager);
         mMap.setOnMarkerClickListener(mClusterManager);
 
         mMap.setOnCameraMoveListener(new GoogleMap.OnCameraMoveListener() {
             @Override
             public void onCameraMove() {
-
-                VisibleRegion region = mMap.getProjection().getVisibleRegion();
-
-                for (Circle circle : mCircleList) {
-
-                    if (region.latLngBounds.contains(circle.getCenter())) {
-                        circle.setVisible(false);
-                    } else {
-
-                        Location nearLeftLocation = new Location("");
-                        nearLeftLocation.setLatitude(region.nearLeft.latitude);
-                        nearLeftLocation.setLongitude(region.nearLeft.longitude);
-
-                        Location nearRightLocation = new Location("");
-                        nearRightLocation.setLatitude(region.nearRight.latitude);
-                        nearRightLocation.setLongitude(region.nearRight.longitude);
-
-                        double maximumRadius = nearLeftLocation.distanceTo(nearRightLocation);
-                        double minimumRadius = maximumRadius / 2;
-
-                        Location circleLocation = new Location("");
-                        circleLocation.setLatitude(circle.getCenter().latitude);
-                        circleLocation.setLongitude(circle.getCenter().longitude);
-
-                        LatLng currentTarget = mMap.getCameraPosition().target;
-
-                        Location currentTargetLocation = new Location("");
-                        currentTargetLocation.setLatitude(currentTarget.latitude);
-                        currentTargetLocation.setLongitude(currentTarget.longitude);
-
-                        double radius = circleLocation.distanceTo(currentTargetLocation);
-
-                        if (minimumRadius <= radius && radius <= maximumRadius) {
-                            circle.setVisible(true);
-                            circle.setRadius(radius * .6);
-                        } else {
-                            circle.setVisible(false);
-                        }
-                    }
-                }
+                handleOffCameraPlaces();
             }
         });
 
@@ -365,7 +268,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             public boolean onClusterItemClick(PlaceItem selectedPlaceItem) {
                 // TODO: Make sure this is synced with correct place item list.
-                mRecyclerView.smoothScrollToPosition(PlaceItemContent.getInstance().getPlaceItemList().indexOf(selectedPlaceItem));
+                mRecyclerView.smoothScrollToPosition(PlaceItemContent.nearby().indexOf(selectedPlaceItem));
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(selectedPlaceItem.getPosition(), 15.0f));
                 return true;
             }
@@ -374,6 +277,65 @@ public class MainActivity extends AppCompatActivity
         onAccessFineLocationPermissionGranted();
 
         animateToFirstPlace();
+
+        updateUI();
+    }
+
+    private void handleOffCameraPlaces() {
+
+        VisibleRegion region = mMap.getProjection().getVisibleRegion();
+
+        for (Circle circle : mCircleList) {
+
+            // if place is visible do not show circle
+            if (region.latLngBounds.contains(circle.getCenter())) {
+                circle.setVisible(false);
+            } else {
+
+                // else show circle with appropriate radius if place is just off the map
+
+                Location circleLocation = new Location("");
+                circleLocation.setLatitude(circle.getCenter().latitude);
+                circleLocation.setLongitude(circle.getCenter().longitude);
+
+                Location nearLeftLocation = new Location("");
+                nearLeftLocation.setLatitude(region.nearLeft.latitude);
+                nearLeftLocation.setLongitude(region.nearLeft.longitude);
+
+                Location nearRightLocation = new Location("");
+                nearRightLocation.setLatitude(region.nearRight.latitude);
+                nearRightLocation.setLongitude(region.nearRight.longitude);
+
+                Location farLeftLocation = new Location("");
+                nearLeftLocation.setLatitude(region.farLeft.latitude);
+                nearLeftLocation.setLongitude(region.farLeft.longitude);
+
+                Location farRightLocation = new Location("");
+                farRightLocation.setLatitude(region.farRight.latitude);
+                farRightLocation.setLongitude(region.farRight.longitude);
+
+                double horizontalDistance = nearLeftLocation.distanceTo(nearRightLocation);
+                double verticalDistance = nearLeftLocation.distanceTo(farLeftLocation);
+
+                double maximumRadius = nearLeftLocation.distanceTo(nearRightLocation);
+                double minimumRadius = maximumRadius / 2;
+
+                LatLng currentTarget = mMap.getCameraPosition().target;
+
+                Location currentTargetLocation = new Location("");
+                currentTargetLocation.setLatitude(currentTarget.latitude);
+                currentTargetLocation.setLongitude(currentTarget.longitude);
+
+                double radius = circleLocation.distanceTo(currentTargetLocation);
+
+                if (minimumRadius <= radius && radius <= maximumRadius) {
+                    circle.setVisible(true);
+                    circle.setRadius(radius * .6);
+                } else {
+                    circle.setVisible(false);
+                }
+            }
+        }
     }
 
     private void onAccessFineLocationPermissionGranted() {
@@ -419,7 +381,6 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onResult(@NonNull LocationSettingsResult locationSettingsResult) {
                 final Status status = locationSettingsResult.getStatus();
-                final LocationSettingsStates states = locationSettingsResult.getLocationSettingsStates();
 
                 switch (status.getStatusCode()) {
                     case LocationSettingsStatusCodes.SUCCESS:
@@ -478,10 +439,28 @@ public class MainActivity extends AppCompatActivity
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
     }
 
-
     @Override
     public void onLocationChanged(Location location) {
         FirebaseDatabase.getInstance().getReference("locations").child(User.getUser().getUid()).child("lat").setValue(location.getLatitude());
         FirebaseDatabase.getInstance().getReference("locations").child(User.getUser().getUid()).child("lng").setValue(location.getLongitude());
+    }
+
+
+    @Override
+    public void update(Observable o, Object arg) {
+        mPlaceItemRecyclerViewAdapter.notifyDataSetChanged();
+        updateUI();
+    }
+
+    public void updateUI() {
+
+        mMap.clear();
+
+        mClusterManager.clearItems();
+        mClusterManager.addItems(PlaceItemContent.nearby());
+
+        mCircleList.clear();
+        for (PlaceItem placeItem : PlaceItemContent.nearby())
+            mCircleList.add(mMap.addCircle(new CircleOptions().center(placeItem.getPosition()).visible(false)));
     }
 }

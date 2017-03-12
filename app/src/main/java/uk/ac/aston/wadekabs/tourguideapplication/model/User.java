@@ -3,7 +3,7 @@ package uk.ac.aston.wadekabs.tourguideapplication.model;
 import com.google.firebase.auth.FirebaseUser;
 
 /**
- * Created by bhalchandrawadekar on 08/03/2017.
+ * Created by Bhalchandra Wadekar on 08/03/2017.
  */
 
 public class User {

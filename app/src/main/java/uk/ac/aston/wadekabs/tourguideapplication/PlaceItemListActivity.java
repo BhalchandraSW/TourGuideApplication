@@ -14,6 +14,9 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.places.Places;
 
+import java.util.Observable;
+import java.util.Observer;
+
 import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceItemContent;
 
 /**
@@ -24,7 +27,7 @@ import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceItemContent;
  * item details. On tablets, the activity presents the list of items and
  * item details side-by-side using two vertical panes.
  */
-public class PlaceItemListActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener {
+public class PlaceItemListActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener, Observer {
 
     /**
      * Whether or not the activity is in two-pane mode, i.e. running on a tablet
@@ -33,8 +36,11 @@ public class PlaceItemListActivity extends AppCompatActivity implements GoogleAp
     private boolean mTwoPane;
     private GoogleApiClient mGoogleApiClient;
 
+    private RecyclerView.Adapter mPlaceItemRecyclerViewAdapter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_placeitem_list);
 
@@ -49,6 +55,9 @@ public class PlaceItemListActivity extends AppCompatActivity implements GoogleAp
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
+
+        mPlaceItemRecyclerViewAdapter = new PlaceItemRecyclerViewAdapter(PlaceItemContent.favourites(), mGoogleApiClient);
+        PlaceItemContent.addFavouritesObserver(this);
 
         View recyclerView = findViewById(R.id.placeitem_list);
         assert recyclerView != null;
@@ -92,11 +101,15 @@ public class PlaceItemListActivity extends AppCompatActivity implements GoogleAp
     }
 
     private void setupRecyclerView(@NonNull RecyclerView recyclerView) {
-        recyclerView.setAdapter(new PlaceItemRecyclerViewAdapter(PlaceItemContent.getInstance().getPlaceItemList(), mGoogleApiClient));
+        recyclerView.setAdapter(mPlaceItemRecyclerViewAdapter);
     }
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+    }
 
+    @Override
+    public void update(Observable o, Object arg) {
+        mPlaceItemRecyclerViewAdapter.notifyDataSetChanged();
     }
 }

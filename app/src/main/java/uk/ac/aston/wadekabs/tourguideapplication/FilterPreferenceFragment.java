@@ -53,8 +53,8 @@ public class FilterPreferenceFragment extends PreferenceFragment implements Shar
 
         FirebaseDatabase.getInstance().getReference("preferences").child(User.getUser().getUid()).child("cost").addValueEventListener(new ValueEventListener() {
             @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                int cost = Integer.valueOf(dataSnapshot.getValue().toString());
+            public void onDataChange(DataSnapshot costSnapshot) {
+                int cost = costSnapshot.getValue() != null ? Integer.valueOf(costSnapshot.getValue().toString()) : 2;
                 costPreference.setValue(String.valueOf(cost));
                 costPreference.setSummary(costArray[cost]);
             }
@@ -77,7 +77,7 @@ public class FilterPreferenceFragment extends PreferenceFragment implements Shar
                     type = StringUtils.capitaliseAllWords(type);
                     selectedTypes.add(type);
                 }
-                
+
                 typePreference.setSummary(TextUtils.join(", ", selectedTypes));
             }
 

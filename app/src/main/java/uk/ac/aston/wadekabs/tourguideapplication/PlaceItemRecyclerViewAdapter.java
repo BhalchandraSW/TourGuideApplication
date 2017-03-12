@@ -15,7 +15,6 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import java.util.List;
 
 import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceItem;
-import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceItemContent;
 
 /**
  * Created by Bhalchandra Wadekar on 11/03/2017.
@@ -39,15 +38,12 @@ class PlaceItemRecyclerViewAdapter extends RecyclerView.Adapter<PlaceItemRecycle
     }
 
     @Override
-    public void onViewDetachedFromWindow(PlaceItemViewHolder holder) {
-        super.onViewDetachedFromWindow(holder);
-    }
-
-    @Override
     public void onBindViewHolder(final PlaceItemViewHolder holder, int position) {
-        holder.mItem = PlaceItemContent.getInstance().getPlaceItemList().get(position);
+        holder.mItem = mPlaceItemList.get(position);
         holder.nameTextView.setText(holder.mItem.getTitle());
         holder.addressTextView.setText(holder.mItem.getAddress());
+
+        System.out.println("Id for photo:\t" + holder.mItem);
 
         new PhotoTask(holder, mGoogleApiClient).execute(holder.mItem.getId());
 

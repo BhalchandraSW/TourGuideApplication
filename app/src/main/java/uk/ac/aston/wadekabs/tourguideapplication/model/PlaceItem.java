@@ -4,6 +4,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.maps.android.clustering.ClusterItem;
 
 import java.io.Serializable;
+import java.util.HashMap;
 
 /**
  * Created by Bhalchandra Wadekar on 28/02/2017.
@@ -19,6 +20,15 @@ public class PlaceItem implements ClusterItem, Serializable {
     private boolean favourite = false;
     private boolean visited = false;
     private String photo = "";
+    private HashMap<String, Boolean> photos;
+
+    public HashMap<String, Boolean> getPhotos() {
+        return photos;
+    }
+
+    public void setPhotos(HashMap<String, Boolean> photos) {
+        this.photos = photos;
+    }
 
     public String getId() {
         return id;
@@ -53,7 +63,7 @@ public class PlaceItem implements ClusterItem, Serializable {
 
     @Override
     public boolean equals(Object otherPlaceItem) {
-        return otherPlaceItem instanceof PlaceItem && getId().equals(((PlaceItem) otherPlaceItem).getId());
+        return otherPlaceItem instanceof PlaceItem && this.getId().equals(((PlaceItem) otherPlaceItem).getId());
     }
 
     public boolean isFavourite() {

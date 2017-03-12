@@ -66,7 +66,7 @@ public class PlaceItemDetailActivity extends AppCompatActivity {
                     .commit();
         }
 
-        mSelectedPlaceItem = PlaceItemContent.getInstance().getPlaceItemList().get(getIntent().getIntExtra(PlaceItemDetailFragment.SELECTED_PLACE_ITEM, 0));
+        mSelectedPlaceItem = PlaceItemContent.nearby().get(getIntent().getIntExtra(PlaceItemDetailFragment.SELECTED_PLACE_ITEM, 0));
     }
 
     @Override

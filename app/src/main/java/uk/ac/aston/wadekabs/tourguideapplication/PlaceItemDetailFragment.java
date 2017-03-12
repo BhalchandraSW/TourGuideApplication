@@ -53,7 +53,8 @@ public class PlaceItemDetailFragment extends Fragment {
             Activity activity = this.getActivity();
             CollapsingToolbarLayout appBarLayout = (CollapsingToolbarLayout) activity.findViewById(R.id.toolbar_layout);
             if (appBarLayout != null) {
-                mPlaceItem = PlaceItemContent.getInstance().getPlaceItemList().get(mPlaceItemPosition);
+                // TODO: Change this to object variable list
+                mPlaceItem = PlaceItemContent.nearby().get(mPlaceItemPosition);
                 appBarLayout.setTitle(mPlaceItem.getTitle());
             }
         }

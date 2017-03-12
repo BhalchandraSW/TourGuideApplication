@@ -28,7 +28,8 @@ import javax.servlet.http.HttpServletResponse;
 public class PlaceDetailsServlet extends HttpServlet {
 
     private static Logger Log = Logger.getLogger("uk.ac.aston.wadekabs.tourguideapplication.backend.PlaceDetailsServlet");
-    private static GeoApiContext sContext = new GeoApiContext(new GaeRequestHandler()).setApiKey("AIzaSyCpbB9sM5IyFaG9OsW8MfuEahPnWxHTTEA");
+    private static final String KEY = "AIzaSyC6EOOcdrhZYb1TgD8xpPlRfPwDHnSddGQ";
+    private static GeoApiContext sContext = new GeoApiContext(new GaeRequestHandler()).setApiKey(KEY);
 
     @Override
     protected void doGet(HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {
@@ -54,8 +55,8 @@ public class PlaceDetailsServlet extends HttpServlet {
         }
 
         final DatabaseReference reference = FirebaseDatabase.getInstance().getReference();
-        
-        reference.child("nearbyPlaces").addChildEventListener(new ChildEventListener() {
+
+        reference.child("nearby").addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot userIdDataSnapshot, String s) {
 
@@ -67,19 +68,19 @@ public class PlaceDetailsServlet extends HttpServlet {
 
                         PlaceDetails placeDetails = PlacesApi.placeDetails(sContext, placeId).await();
 
-                        reference.child("placeDetails").child(placeId).child("name").setValue(placeDetails.name);
-                        reference.child("placeDetails").child(placeId).child("address").setValue(placeDetails.formattedAddress);
-                        reference.child("placeDetails").child(placeId).child("priceLevel").setValue(placeDetails.priceLevel);
+                        reference.child("details").child(placeId).child("name").setValue(placeDetails.name);
+                        reference.child("details").child(placeId).child("address").setValue(placeDetails.formattedAddress);
+                        reference.child("details").child(placeId).child("priceLevel").setValue(placeDetails.priceLevel);
 
                         for (String type : placeDetails.types) {
-                            reference.child("placeDetails").child(placeId).child("types").child(type).setValue(true);
+                            reference.child("details").child(placeId).child("types").child(type).setValue(true);
                         }
 
-                        reference.child("placeDetails").child(placeId).child("location").child("lat").setValue(placeDetails.geometry.location.lat);
-                        reference.child("placeDetails").child(placeId).child("location").child("lng").setValue(placeDetails.geometry.location.lng);
+                        reference.child("details").child(placeId).child("location").child("lat").setValue(placeDetails.geometry.location.lat);
+                        reference.child("details").child(placeId).child("location").child("lng").setValue(placeDetails.geometry.location.lng);
 
                         for (Photo photo : placeDetails.photos) {
-                            reference.child("placeDetails").child(placeId).child("photos").child(photo.photoReference).setValue(true);
+                            reference.child("details").child(placeId).child("photos").child(photo.photoReference).setValue(true);
                         }
 
                     } catch (Exception e) {

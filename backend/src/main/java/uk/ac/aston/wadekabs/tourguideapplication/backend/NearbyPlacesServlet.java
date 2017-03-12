@@ -36,7 +36,8 @@ import uk.ac.aston.wadekabs.tourguideapplication.backend.model.PlaceLocation;
 public class NearbyPlacesServlet extends HttpServlet {
 
     private static final Logger LOG = Logger.getLogger(NearbyPlacesServlet.class.getName());
-    private static GeoApiContext sContext = new GeoApiContext(new GaeRequestHandler()).setApiKey("AIzaSyBBbAEy4Frv3KMlfe75T82HMW8QtRhU0fQ");
+    private static final String KEY = "AIzaSyC6EOOcdrhZYb1TgD8xpPlRfPwDHnSddGQ";
+    private static GeoApiContext sContext = new GeoApiContext(new GaeRequestHandler()).setApiKey(KEY);
 
     @Override
     protected void doGet(final HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {
@@ -74,18 +75,17 @@ public class NearbyPlacesServlet extends HttpServlet {
                 try {
                     response = PlacesApi.nearbySearchQuery(sContext, new LatLng(location.getLat(), location.getLng())).await();
                     for (PlacesSearchResult result : response.results) {
-                        reference.child("nearbyPlaces").child(userLocationSnapshot.getKey()).child(result.placeId).setValue(true);
+                        reference.child("nearby").child(userLocationSnapshot.getKey()).child(result.placeId).setValue(true);
                     }
                     return;
                 } catch (Exception ignored) {
-                    ignored.printStackTrace();
                 }
 
                 // Next, try with URL.openStream() and org.json parsing
                 URL url;
                 try {
 
-                    url = new URL("https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=AIzaSyCpbB9sM5IyFaG9OsW8MfuEahPnWxHTTEA&location=" + location.getLat() + "," + location.getLng() + "&radius=50000");
+                    url = new URL("https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=" + KEY + "&location=" + location.getLat() + "," + location.getLng() + "&radius=50000");
 
                     InputStream is = url.openStream();
 
@@ -93,11 +93,12 @@ public class NearbyPlacesServlet extends HttpServlet {
                     is.read(b);
 
                     JSONObject result = new JSONObject(new String(b));
+
                     JSONArray placesArray = result.getJSONArray("results");
 
                     for (Object object : placesArray) {
                         JSONObject place = (JSONObject) object;
-                        reference.child("nearbyPlaces").child(userLocationSnapshot.getKey()).child(place.getString("place_id")).setValue(true);
+                        reference.child("nearby").child(userLocationSnapshot.getKey()).child(place.getString("place_id")).setValue(true);
                     }
 
                 } catch (IOException e) {
@@ -113,7 +114,7 @@ public class NearbyPlacesServlet extends HttpServlet {
                 URL url;
                 try {
 
-                    url = new URL("https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=AIzaSyCpbB9sM5IyFaG9OsW8MfuEahPnWxHTTEA&location=" + location.getLat() + "," + location.getLng() + "&radius=50000");
+                    url = new URL("https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=" + KEY + "&location=" + location.getLat() + "," + location.getLng() + "&radius=50000");
 
                     InputStream is = url.openStream();
 
@@ -125,7 +126,7 @@ public class NearbyPlacesServlet extends HttpServlet {
 
                     for (Object object : placesArray) {
                         JSONObject place = (JSONObject) object;
-                        reference.child("nearbyPlaces").child(dataSnapshot.getKey()).child(place.getString("place_id")).setValue(true);
+                        reference.child("nearby").child(dataSnapshot.getKey()).child(place.getString("place_id")).setValue(true);
                     }
 
                 } catch (IOException e) {
@@ -136,7 +137,7 @@ public class NearbyPlacesServlet extends HttpServlet {
 
             @Override
             public void onChildRemoved(DataSnapshot dataSnapshot) {
-                FirebaseDatabase.getInstance().getReference("nearbyPlaces").child(dataSnapshot.getKey()).removeValue();
+                FirebaseDatabase.getInstance().getReference("nearby").child(dataSnapshot.getKey()).removeValue();
             }
 
             @Override
