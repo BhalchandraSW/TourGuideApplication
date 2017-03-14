@@ -19,7 +19,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceFilter;
 import uk.ac.aston.wadekabs.tourguideapplication.model.User;
 
 /**
@@ -33,9 +32,7 @@ public class FilterPreferenceFragment extends PreferenceFragment implements Shar
 
     private ListPreference costPreference;
     private MultiSelectListPreference typePreference;
-
-    private PlaceFilter mFilter = PlaceFilter.getInstance();
-
+    
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -51,7 +48,7 @@ public class FilterPreferenceFragment extends PreferenceFragment implements Shar
         typePreference.setValues(getPreferenceScreen().getSharedPreferences().getStringSet(TYPE_PREFERENCE, new HashSet<String>()));
         // TODO: Set summary for type preference
 
-        FirebaseDatabase.getInstance().getReference("preferences").child(User.getUser().getUid()).child("cost").addValueEventListener(new ValueEventListener() {
+        FirebaseDatabase.getInstance().getReference("preferences").child(User.getUser().getUid()).child("priceLevel").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot costSnapshot) {
                 int cost = costSnapshot.getValue() != null ? Integer.valueOf(costSnapshot.getValue().toString()) : 2;
@@ -108,7 +105,7 @@ public class FilterPreferenceFragment extends PreferenceFragment implements Shar
             case COST_PREFERENCE:
 
                 int cost = Integer.valueOf(costPreference.getValue());
-                FirebaseDatabase.getInstance().getReference("preferences").child(User.getUser().getUid()).child("cost").setValue(cost);
+                FirebaseDatabase.getInstance().getReference("preferences").child(User.getUser().getUid()).child("priceLevel").setValue(cost);
 
                 break;
 

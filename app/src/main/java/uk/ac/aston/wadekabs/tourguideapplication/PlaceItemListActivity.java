@@ -17,7 +17,7 @@ import com.google.android.gms.location.places.Places;
 import java.util.Observable;
 import java.util.Observer;
 
-import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceItemContent;
+import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceContent;
 
 /**
  * An activity representing a list of PlaceItems. This activity
@@ -56,8 +56,8 @@ public class PlaceItemListActivity extends AppCompatActivity implements GoogleAp
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
-        mPlaceItemRecyclerViewAdapter = new PlaceItemRecyclerViewAdapter(PlaceItemContent.favourites(), mGoogleApiClient);
-        PlaceItemContent.addFavouritesObserver(this);
+        mPlaceItemRecyclerViewAdapter = new PlaceItemRecyclerViewAdapter(PlaceContent.favourites(), mGoogleApiClient);
+        PlaceContent.addFavouritesObserver(this);
 
         View recyclerView = findViewById(R.id.placeitem_list);
         assert recyclerView != null;

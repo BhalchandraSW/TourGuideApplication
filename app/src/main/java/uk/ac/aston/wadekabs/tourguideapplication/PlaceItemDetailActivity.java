@@ -15,8 +15,8 @@ import android.widget.ImageView;
 
 import com.google.firebase.database.FirebaseDatabase;
 
-import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceItem;
-import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceItemContent;
+import uk.ac.aston.wadekabs.tourguideapplication.model.Place;
+import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceContent;
 import uk.ac.aston.wadekabs.tourguideapplication.model.User;
 
 /**
@@ -27,7 +27,7 @@ import uk.ac.aston.wadekabs.tourguideapplication.model.User;
  */
 public class PlaceItemDetailActivity extends AppCompatActivity {
 
-    private PlaceItem mSelectedPlaceItem;
+    private Place mSelectedPlaceItem;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,7 +66,7 @@ public class PlaceItemDetailActivity extends AppCompatActivity {
                     .commit();
         }
 
-        mSelectedPlaceItem = PlaceItemContent.nearby().get(getIntent().getIntExtra(PlaceItemDetailFragment.SELECTED_PLACE_ITEM, 0));
+        mSelectedPlaceItem = PlaceContent.nearby().get(getIntent().getIntExtra(PlaceItemDetailFragment.SELECTED_PLACE_ITEM, 0));
     }
 
     @Override
@@ -115,9 +115,9 @@ public class PlaceItemDetailActivity extends AppCompatActivity {
         mSelectedPlaceItem.setFavourite(!mSelectedPlaceItem.isFavourite());
 
         if (mSelectedPlaceItem.isFavourite())
-            FirebaseDatabase.getInstance().getReference("favourites").child(User.getUser().getUid()).child(mSelectedPlaceItem.getId()).setValue(mSelectedPlaceItem.isFavourite());
+            FirebaseDatabase.getInstance().getReference("favourites").child(User.getUser().getUid()).child(mSelectedPlaceItem.getPlaceId()).setValue(mSelectedPlaceItem.isFavourite());
         else
-            FirebaseDatabase.getInstance().getReference("favourites").child(User.getUser().getUid()).child(mSelectedPlaceItem.getId()).removeValue();
+            FirebaseDatabase.getInstance().getReference("favourites").child(User.getUser().getUid()).child(mSelectedPlaceItem.getPlaceId()).removeValue();
 
         ((ImageView) view).setColorFilter(mSelectedPlaceItem.isFavourite() ? Color.RED : Color.GRAY);
     }

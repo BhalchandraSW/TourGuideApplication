@@ -10,7 +10,6 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.maps.GaeRequestHandler;
 import com.google.maps.GeoApiContext;
 import com.google.maps.PlacesApi;
-import com.google.maps.model.Photo;
 import com.google.maps.model.PlaceDetails;
 
 import java.io.IOException;
@@ -27,7 +26,7 @@ import javax.servlet.http.HttpServletResponse;
 
 public class PlaceDetailsServlet extends HttpServlet {
 
-    private static Logger Log = Logger.getLogger("uk.ac.aston.wadekabs.tourguideapplication.backend.PlaceDetailsServlet");
+    private static Logger LOG = Logger.getLogger("uk.ac.aston.wadekabs.tourguideapplication.backend.PlaceDetailsServlet");
     private static final String KEY = "AIzaSyC6EOOcdrhZYb1TgD8xpPlRfPwDHnSddGQ";
     private static GeoApiContext sContext = new GeoApiContext(new GaeRequestHandler()).setApiKey(KEY);
 
@@ -45,13 +44,13 @@ public class PlaceDetailsServlet extends HttpServlet {
         try {
             FirebaseApp.getInstance();
         } catch (Exception error) {
-            Log.info("doesn't exist...");
+            LOG.info("doesn't exist...");
         }
 
         try {
             FirebaseApp.initializeApp(options);
         } catch (Exception error) {
-            Log.info("already exists...");
+            LOG.info("already exists...");
         }
 
         final DatabaseReference reference = FirebaseDatabase.getInstance().getReference();
@@ -79,9 +78,23 @@ public class PlaceDetailsServlet extends HttpServlet {
                         reference.child("details").child(placeId).child("location").child("lat").setValue(placeDetails.geometry.location.lat);
                         reference.child("details").child(placeId).child("location").child("lng").setValue(placeDetails.geometry.location.lng);
 
-                        for (Photo photo : placeDetails.photos) {
-                            reference.child("details").child(placeId).child("photos").child(photo.photoReference).setValue(true);
-                        }
+//                        String urlString = "https://kgsearch.googleapis.com/v1/entities:search"
+//                                + "?query=" + URLEncoder.encode(placeDetails.formattedAddress, "utf-8")
+//                                + "&limit=1"
+//                                + "&key=" + KEY;
+//
+//                        URL url = new URL(urlString);
+//
+//                        InputStream is = url.openStream();
+//
+//                        byte[] b = new byte[is.available()];
+//                        is.read(b);
+
+
+//                        LOG.info(placeDetails.name + "\n" + new String(b));
+//                        for (Photo photo : placeDetails.photos) {
+//                            reference.child("details").child(placeId).child("photos").child(photo.photoReference).setValue(true);
+//                        }
 
                     } catch (Exception e) {
                         e.printStackTrace();

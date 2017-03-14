@@ -1,12 +1,12 @@
 package uk.ac.aston.wadekabs.tourguideapplication.model;
 
-import java.io.Serializable;
+import com.google.android.gms.maps.model.LatLng;
 
 /**
  * Created by bhalchandrawadekar on 08/03/2017.
  */
 
-public class PlaceLocation implements Serializable {
+public class PlaceLocation {
 
     private double lat;
     private double lng;
@@ -25,5 +25,9 @@ public class PlaceLocation implements Serializable {
 
     public void setLng(double lng) {
         this.lng = lng;
+    }
+
+    public LatLng latLng() {
+        return new LatLng(lat, lng);
     }
 }

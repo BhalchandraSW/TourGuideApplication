@@ -11,8 +11,8 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceItem;
-import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceItemContent;
+import uk.ac.aston.wadekabs.tourguideapplication.model.Place;
+import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceContent;
 
 /**
  * A fragment representing a single PlaceItem detail screen.
@@ -31,7 +31,7 @@ public class PlaceItemDetailFragment extends Fragment {
      * The dummy content this fragment is presenting.
      */
     private int mPlaceItemPosition;
-    private PlaceItem mPlaceItem;
+    private Place mPlaceItem;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -54,8 +54,8 @@ public class PlaceItemDetailFragment extends Fragment {
             CollapsingToolbarLayout appBarLayout = (CollapsingToolbarLayout) activity.findViewById(R.id.toolbar_layout);
             if (appBarLayout != null) {
                 // TODO: Change this to object variable list
-                mPlaceItem = PlaceItemContent.nearby().get(mPlaceItemPosition);
-                appBarLayout.setTitle(mPlaceItem.getTitle());
+                mPlaceItem = PlaceContent.nearby().get(mPlaceItemPosition);
+                appBarLayout.setTitle(mPlaceItem.getName());
             }
         }
     }

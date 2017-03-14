@@ -41,7 +41,8 @@ import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.VisibleRegion;
-import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.maps.android.clustering.ClusterManager;
 
 import java.util.ArrayList;
@@ -49,20 +50,25 @@ import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 
+import uk.ac.aston.wadekabs.tourguideapplication.model.Place;
+import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceContent;
 import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceItem;
-import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceItemContent;
-import uk.ac.aston.wadekabs.tourguideapplication.model.User;
+import uk.ac.aston.wadekabs.tourguideapplication.service.LocationAwarenessService;
 
 
 // TODO: When internet is not available
-
+// TODO: Do not check location here instead use LocationAwarenessService
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener, Observer {
 
     private static final int REQUEST_CODE_ACCESS_FINE_LOCATION = 1;
     private static final int REQUEST_CHECK_SETTINGS = 2;
 
+    private static final String MAP_BOTTOM_PADDING = "map_bottom_padding";
+
     private GoogleMap mMap;
+    private int mMapBottonPadding;
+
     private GoogleApiClient mGoogleApiClient;
     private FilterPreferenceFragment mFilterPreferenceFragment;
 
@@ -80,6 +86,8 @@ public class MainActivity extends AppCompatActivity
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        System.out.println("onCreate: called\tsavedInstanceState: " + savedInstanceState);
 
         // Kick off the process of building a GoogleApiClient and requesting the LocationServices
         // API.
@@ -115,14 +123,37 @@ public class MainActivity extends AppCompatActivity
         mFilterPreferenceFragment = (FilterPreferenceFragment) getFragmentManager().findFragmentById(R.id.filter);
         getFragmentManager().beginTransaction().hide(mFilterPreferenceFragment).commit();
 
-        mPlaceItemRecyclerViewAdapter = new PlaceItemRecyclerViewAdapter(PlaceItemContent.nearby(), mGoogleApiClient);
+        mPlaceItemRecyclerViewAdapter = new PlaceItemRecyclerViewAdapter(PlaceContent.nearby(), mGoogleApiClient);
         mRecyclerView = (RecyclerView) findViewById(R.id.placeitem_card_list);
         mRecyclerView.setHasFixedSize(true);
         mRecyclerView.setAdapter(mPlaceItemRecyclerViewAdapter);
 
         new PagerSnapHelper().attachToRecyclerView(mRecyclerView);
 
-        PlaceItemContent.addNearbyObserver(this);
+        PlaceContent.addNearbyObserver(this);
+
+        FirebaseMessaging.getInstance().subscribeToTopic("test");
+
+        String token = FirebaseInstanceId.getInstance().getToken();
+        System.out.println("Token:\t" + token);
+
+//        LocationAwarenessService service = new LocationAwarenessService();
+        Intent intent = new Intent(this, LocationAwarenessService.class);
+        startService(intent);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+
+        System.out.println("onRestoreInstaceState: called");
+        mMapBottonPadding = savedInstanceState.getInt(MAP_BOTTOM_PADDING);
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(MAP_BOTTOM_PADDING, mMapBottonPadding);
     }
 
     /**
@@ -171,8 +202,8 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void animateToFirstPlace() {
-        if (mMap != null && PlaceItemContent.nearby().size() > 0) {
-            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(PlaceItemContent.nearby().get(0).getPosition(), 15.0f));
+        if (mMap != null && PlaceContent.nearby().size() > 0) {
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(PlaceContent.nearby().get(0).getLocation().latLng(), 15.0f));
         }
     }
 
@@ -236,16 +267,23 @@ public class MainActivity extends AppCompatActivity
 
         mMap = googleMap;
 
+        if (mMapBottonPadding > 0) {
+            mMap.setPadding(0, 0, 0, mMapBottonPadding);
+        }
+
         mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
 
                 super.onScrolled(recyclerView, dx, dy);
 
-                mMap.setPadding(0, 0, 0, recyclerView.getMeasuredHeight());
+                mMapBottonPadding = recyclerView.getMeasuredHeight();
+                mMap.setPadding(0, 0, 0, mMapBottonPadding);
 
-                int i = recyclerView.computeHorizontalScrollOffset() / (recyclerView.computeHorizontalScrollRange() / PlaceItemContent.nearby().size());
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(PlaceItemContent.nearby().get(i).getPosition(), 15.0f));
+                if (PlaceContent.nearby().size() > 0) {
+                    int i = recyclerView.computeHorizontalScrollOffset() / (recyclerView.computeHorizontalScrollRange() / PlaceContent.nearby().size());
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(PlaceContent.nearby().get(i).getLocation().latLng(), 15.0f));
+                }
             }
         });
 
@@ -268,7 +306,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             public boolean onClusterItemClick(PlaceItem selectedPlaceItem) {
                 // TODO: Make sure this is synced with correct place item list.
-                mRecyclerView.smoothScrollToPosition(PlaceItemContent.nearby().indexOf(selectedPlaceItem));
+                mRecyclerView.smoothScrollToPosition(PlaceContent.nearby().indexOf(selectedPlaceItem.getPlace()));
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(selectedPlaceItem.getPosition(), 15.0f));
                 return true;
             }
@@ -441,8 +479,8 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onLocationChanged(Location location) {
-        FirebaseDatabase.getInstance().getReference("locations").child(User.getUser().getUid()).child("lat").setValue(location.getLatitude());
-        FirebaseDatabase.getInstance().getReference("locations").child(User.getUser().getUid()).child("lng").setValue(location.getLongitude());
+//        FirebaseDatabase.getInstance().getReference("locations").child(User.getUser().getUid()).child("lat").setValue(location.getLatitude());
+//        FirebaseDatabase.getInstance().getReference("locations").child(User.getUser().getUid()).child("lng").setValue(location.getLongitude());
     }
 
 
@@ -457,10 +495,11 @@ public class MainActivity extends AppCompatActivity
         mMap.clear();
 
         mClusterManager.clearItems();
-        mClusterManager.addItems(PlaceItemContent.nearby());
+        for (Place place : PlaceContent.nearby())
+            mClusterManager.addItem(new PlaceItem(place));
 
         mCircleList.clear();
-        for (PlaceItem placeItem : PlaceItemContent.nearby())
-            mCircleList.add(mMap.addCircle(new CircleOptions().center(placeItem.getPosition()).visible(false)));
+        for (Place place : PlaceContent.nearby())
+            mCircleList.add(mMap.addCircle(new CircleOptions().center(place.getLocation().latLng()).visible(false)));
     }
 }

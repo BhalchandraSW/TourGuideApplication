@@ -14,7 +14,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 
 import java.util.List;
 
-import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceItem;
+import uk.ac.aston.wadekabs.tourguideapplication.model.Place;
 
 /**
  * Created by Bhalchandra Wadekar on 11/03/2017.
@@ -22,10 +22,10 @@ import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceItem;
 
 class PlaceItemRecyclerViewAdapter extends RecyclerView.Adapter<PlaceItemRecyclerViewAdapter.PlaceItemViewHolder> {
 
-    private List<PlaceItem> mPlaceItemList;
+    private List<Place> mPlaceItemList;
     private GoogleApiClient mGoogleApiClient;
 
-    PlaceItemRecyclerViewAdapter(List<PlaceItem> placeItemList, GoogleApiClient googleApiClient) {
+    PlaceItemRecyclerViewAdapter(List<Place> placeItemList, GoogleApiClient googleApiClient) {
         mPlaceItemList = placeItemList;
         mGoogleApiClient = googleApiClient;
     }
@@ -40,12 +40,12 @@ class PlaceItemRecyclerViewAdapter extends RecyclerView.Adapter<PlaceItemRecycle
     @Override
     public void onBindViewHolder(final PlaceItemViewHolder holder, int position) {
         holder.mItem = mPlaceItemList.get(position);
-        holder.nameTextView.setText(holder.mItem.getTitle());
+        holder.nameTextView.setText(holder.mItem.getName());
         holder.addressTextView.setText(holder.mItem.getAddress());
 
         System.out.println("Id for photo:\t" + holder.mItem);
 
-        new PhotoTask(holder, mGoogleApiClient).execute(holder.mItem.getId());
+        new PhotoTask(holder, mGoogleApiClient).execute(holder.mItem.getPlaceId());
 
         holder.mItemView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -66,7 +66,7 @@ class PlaceItemRecyclerViewAdapter extends RecyclerView.Adapter<PlaceItemRecycle
 
     class PlaceItemViewHolder extends RecyclerView.ViewHolder {
 
-        PlaceItem mItem;
+        Place mItem;
 
         final CardView mItemView;
         final ImageView imageView;

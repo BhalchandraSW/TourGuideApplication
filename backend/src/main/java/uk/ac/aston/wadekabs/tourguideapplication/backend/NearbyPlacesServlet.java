@@ -27,8 +27,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import uk.ac.aston.wadekabs.tourguideapplication.backend.model.PlaceLocation;
-
 /**
  * Created by Bhalchandra Wadekar on 08/03/2017.
  */
@@ -38,6 +36,8 @@ public class NearbyPlacesServlet extends HttpServlet {
     private static final Logger LOG = Logger.getLogger(NearbyPlacesServlet.class.getName());
     private static final String KEY = "AIzaSyC6EOOcdrhZYb1TgD8xpPlRfPwDHnSddGQ";
     private static GeoApiContext sContext = new GeoApiContext(new GaeRequestHandler()).setApiKey(KEY);
+
+    static DatabaseReference REFERENCE;
 
     @Override
     protected void doGet(final HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {
@@ -62,20 +62,21 @@ public class NearbyPlacesServlet extends HttpServlet {
             LOG.info("already exists...");
         }
 
-        final DatabaseReference reference = FirebaseDatabase.getInstance().getReference();
+        REFERENCE = FirebaseDatabase.getInstance().getReference();
 
-        reference.child("locations").addChildEventListener(new ChildEventListener() {
+        REFERENCE.child("locations").addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(final DataSnapshot userLocationSnapshot, String s) {
 
-                PlaceLocation location = userLocationSnapshot.getValue(PlaceLocation.class);
+                double lat = userLocationSnapshot.child("lat").getValue(Double.class);
+                double lng = userLocationSnapshot.child("lng").getValue(Double.class);
 
                 // First try with google maps services java library
                 PlacesSearchResponse response;
                 try {
-                    response = PlacesApi.nearbySearchQuery(sContext, new LatLng(location.getLat(), location.getLng())).await();
+                    response = PlacesApi.nearbySearchQuery(sContext, new LatLng(lat, lng)).await();
                     for (PlacesSearchResult result : response.results) {
-                        reference.child("nearby").child(userLocationSnapshot.getKey()).child(result.placeId).setValue(true);
+                        REFERENCE.child("nearby").child(userLocationSnapshot.getKey()).child(result.placeId).setValue(true);
                     }
                     return;
                 } catch (Exception ignored) {
@@ -85,7 +86,9 @@ public class NearbyPlacesServlet extends HttpServlet {
                 URL url;
                 try {
 
-                    url = new URL("https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=" + KEY + "&location=" + location.getLat() + "," + location.getLng() + "&radius=50000");
+                    String urlString = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=" + KEY + "&location=" + lat + "," + lng + "&radius=50000";
+
+                    url = new URL(urlString);
 
                     InputStream is = url.openStream();
 
@@ -98,7 +101,7 @@ public class NearbyPlacesServlet extends HttpServlet {
 
                     for (Object object : placesArray) {
                         JSONObject place = (JSONObject) object;
-                        reference.child("nearby").child(userLocationSnapshot.getKey()).child(place.getString("place_id")).setValue(true);
+                        REFERENCE.child("nearby").child(userLocationSnapshot.getKey()).child(place.getString("place_id")).setValue(true);
                     }
 
                 } catch (IOException e) {
@@ -107,14 +110,15 @@ public class NearbyPlacesServlet extends HttpServlet {
             }
 
             @Override
-            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+            public void onChildChanged(DataSnapshot userLocationSnapshot, String s) {
 
-                PlaceLocation location = dataSnapshot.getValue(PlaceLocation.class);
+                double lat = userLocationSnapshot.child("lat").getValue(Double.class);
+                double lng = userLocationSnapshot.child("lng").getValue(Double.class);
 
                 URL url;
                 try {
 
-                    url = new URL("https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=" + KEY + "&location=" + location.getLat() + "," + location.getLng() + "&radius=50000");
+                    url = new URL("https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=" + KEY + "&location=" + lat + "," + lng + "&radius=50000");
 
                     InputStream is = url.openStream();
 
@@ -126,13 +130,12 @@ public class NearbyPlacesServlet extends HttpServlet {
 
                     for (Object object : placesArray) {
                         JSONObject place = (JSONObject) object;
-                        reference.child("nearby").child(dataSnapshot.getKey()).child(place.getString("place_id")).setValue(true);
+                        REFERENCE.child("nearby").child(userLocationSnapshot.getKey()).child(place.getString("place_id")).setValue(true);
                     }
 
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-
             }
 
             @Override
@@ -142,7 +145,6 @@ public class NearbyPlacesServlet extends HttpServlet {
 
             @Override
             public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
             }
 
             @Override
@@ -150,6 +152,5 @@ public class NearbyPlacesServlet extends HttpServlet {
                 LOG.severe(databaseError.getMessage() + "\t" + databaseError.getDetails());
             }
         });
-
     }
 }

@@ -16,39 +16,44 @@ import java.util.Observer;
  * Created by Bhalchandra Wadekar on 12/03/2017.
  */
 
-public class PlaceItemContent extends Observable {
+public class PlaceContent extends Observable implements Observer {
 
     private static final String FAVOURITES = "favourites";
     private static final String NEARBY = "nearby";
 
-    private static PlaceItemContent sFavourites;
-    private static PlaceItemContent sNearby;
+    private static PlaceContent sFavourites;
+    private static PlaceContent sNearby;
+
     private static DatabaseReference sDatabase;
 
     private String mType;
-    private List<PlaceItem> mPlaceItemList;
+    private List<Place> mPlaceList;
+    private PlaceChildEventListener mListener;
 
-    private PlaceItemContent(String type) {
+    private PlaceContent(String type) {
         mType = type;
         sDatabase = FirebaseDatabase.getInstance().getReference();
     }
 
-    public static List<PlaceItem> favourites() {
+    public static List<Place> favourites() {
         if (sFavourites == null) {
-            sFavourites = new PlaceItemContent(FAVOURITES);
+            sFavourites = new PlaceContent(FAVOURITES);
         }
-        return sFavourites.getPlaceItemList();
+        return sFavourites.getPlaceList();
     }
 
-    public static List<PlaceItem> nearby() {
+    public static List<Place> nearby() {
         if (sNearby == null) {
-            sNearby = new PlaceItemContent(NEARBY);
+            sNearby = new PlaceContent(NEARBY);
+
+            PlaceFilter instance = PlaceFilter.getInstance();
+            instance.addObserver(sNearby);
         }
-        return sNearby.getPlaceItemList();
+        return sNearby.getPlaceList();
     }
 
-    public static void addFavourite(PlaceItem placeItem) {
-        sDatabase.child(FAVOURITES).child(placeItem.getId()).setValue(true);
+    public static void addFavourite(Place place) {
+        sDatabase.child(FAVOURITES).child(place.getPlaceId()).setValue(true);
     }
 
     public static void addFavouritesObserver(Observer observer) {
@@ -59,22 +64,40 @@ public class PlaceItemContent extends Observable {
         sNearby.addObserver(observer);
     }
 
-    private List<PlaceItem> getPlaceItemList() {
-
-        if (mPlaceItemList == null) {
-            mPlaceItemList = new ArrayList<>();
-            sDatabase.child(mType).child(User.getUser().getUid()).addChildEventListener(new PlaceItemChildEventListener(mPlaceItemList));
-        }
-
-        return mPlaceItemList;
+    public static void addFilter(PlaceFilter filter) {
+        filter.addObserver(sNearby);
     }
 
-    private class PlaceItemChildEventListener implements ChildEventListener {
+    private List<Place> getPlaceList() {
 
-        private List<PlaceItem> mPlaceItemList;
+        if (mPlaceList == null) {
+            mPlaceList = new ArrayList<>();
+            mListener = new PlaceChildEventListener(mPlaceList);
+            sDatabase.child(mType).child(User.getUser().getUid()).addChildEventListener(mListener);
+        }
 
-        PlaceItemChildEventListener(List<PlaceItem> placeItemList) {
-            mPlaceItemList = placeItemList;
+        return mPlaceList;
+    }
+
+    @Override
+    public void update(Observable o, Object arg) {
+
+        if (mPlaceList.size() > 0) {
+            mPlaceList.clear();
+            setChanged();
+            notifyObservers();
+        }
+
+        sDatabase.child(mType).child(User.getUser().getUid()).removeEventListener(mListener);
+        sDatabase.child(mType).child(User.getUser().getUid()).addChildEventListener(mListener);
+    }
+
+    private class PlaceChildEventListener implements ChildEventListener {
+
+        private List<Place> mPlaceList;
+
+        PlaceChildEventListener(List<Place> placeList) {
+            mPlaceList = placeList;
         }
 
         @Override
@@ -109,13 +132,19 @@ public class PlaceItemContent extends Observable {
                 @Override
                 public void onDataChange(DataSnapshot placeDetailsSnapshot) {
 
-                    PlaceItem placeItem = placeDetailsSnapshot.getValue(PlaceItem.class);
+                    Place place = placeDetailsSnapshot.getValue(Place.class);
 
-                    if (placeItem != null) {
-                        placeItem.setId(placeId);
-                        mPlaceItemList.add(placeItem);
-                        setChanged();
-                        notifyObservers();
+                    System.out.println(place);
+
+                    if (place != null && place.satisfiesFilter()) {
+                        place.setPlaceId(placeId);
+
+                        // TODO: Remove listeners instead of this workaround
+                        if (!mPlaceList.contains(place)) {
+                            mPlaceList.add(place);
+                            setChanged();
+                            notifyObservers();
+                        }
                     }
                 }
 
@@ -123,14 +152,11 @@ public class PlaceItemContent extends Observable {
                 public void onCancelled(DatabaseError databaseError) {
                 }
             });
-
         }
 
         private void removePlaceHavingPlaceId(String placeId) {
 
-            PlaceItem placeToBeRemoved = new PlaceItem();
-            placeToBeRemoved.setId(placeId);
-            mPlaceItemList.remove(placeToBeRemoved);
+            mPlaceList.remove(new Place(placeId));
 
             setChanged();
             notifyObservers();

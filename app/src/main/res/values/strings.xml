@@ -33,11 +33,13 @@
         <item>Art Gallery</item>
         <item>Museum</item>
         <item>Restaurant</item>
+        <item>Zoo</item>
     </string-array>
     <string-array name="pref_type_list_values">
         <item>art_gallery</item>
         <item>museum</item>
         <item>restaurant</item>
+        <item>zoo</item>
     </string-array>
 
     <!-- Strings related to login -->
