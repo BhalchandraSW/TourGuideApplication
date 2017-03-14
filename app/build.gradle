@@ -50,7 +50,6 @@ dependencies {
     compile 'com.google.firebase:firebase-core:10.2.0'
     compile 'com.google.firebase:firebase-database:10.2.0'
     compile 'com.google.firebase:firebase-messaging:10.2.0'
-    compile 'com.android.support.constraint:constraint-layout:1.0.2'
     compile 'commons-lang:commons-lang:20030203.000129'
     testCompile 'junit:junit:4.12'
 }

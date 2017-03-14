@@ -42,7 +42,6 @@ import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.VisibleRegion;
 import com.google.firebase.iid.FirebaseInstanceId;
-import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.maps.android.clustering.ClusterManager;
 
 import java.util.ArrayList;
@@ -132,7 +131,8 @@ public class MainActivity extends AppCompatActivity
 
         PlaceContent.addNearbyObserver(this);
 
-        FirebaseMessaging.getInstance().subscribeToTopic("test");
+
+        // FirebaseMessaging.getInstance().subscribeToTopic("test");
 
         String token = FirebaseInstanceId.getInstance().getToken();
         System.out.println("Token:\t" + token);
@@ -140,6 +140,8 @@ public class MainActivity extends AppCompatActivity
 //        LocationAwarenessService service = new LocationAwarenessService();
         Intent intent = new Intent(this, LocationAwarenessService.class);
         startService(intent);
+
+
     }
 
     @Override

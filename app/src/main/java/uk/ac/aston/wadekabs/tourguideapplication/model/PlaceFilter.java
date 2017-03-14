@@ -49,10 +49,13 @@ public class PlaceFilter extends Observable {
 
                     sInstance = placeFilterSnapshot.getValue(PlaceFilter.class);
 
-                    PlaceContent.addFilter(sInstance);
+                    if (sInstance != null) {
 
-                    sInstance.setChanged();
-                    sInstance.notifyObservers();
+                        PlaceContent.addFilter(sInstance);
+
+                        sInstance.setChanged();
+                        sInstance.notifyObservers();
+                    }
                 }
 
                 @Override

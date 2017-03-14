@@ -3,7 +3,7 @@
     <string name="title_activity_main">TourMate</string>
     <string name="title_placeitem_list">Favourite Places</string>
     <string name="title_placeitem_detail">PlaceItem Detail</string>
-    <string name="title_activity_login">Sign in</string>
+    <string name="title_activity_login">TourMate</string>
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>

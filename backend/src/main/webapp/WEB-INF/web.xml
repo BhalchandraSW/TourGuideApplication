@@ -30,6 +30,16 @@
         <url-pattern>/placeDetails</url-pattern>
     </servlet-mapping>
 
+    <servlet>
+        <servlet-name>NearFavouritePlaceServlet</servlet-name>
+        <servlet-class>uk.ac.aston.wadekabs.tourguideapplication.backend.NearFavouritePlaceServlet
+        </servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>NearFavouritePlaceServlet</servlet-name>
+        <url-pattern>/nearFavouritePlace</url-pattern>
+    </servlet-mapping>
+
     <welcome-file-list>
         <welcome-file>index.html</welcome-file>
     </welcome-file-list>
