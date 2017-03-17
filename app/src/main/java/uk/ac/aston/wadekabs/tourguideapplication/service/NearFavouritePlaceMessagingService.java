@@ -8,5 +8,6 @@ public class NearFavouritePlaceMessagingService extends FirebaseMessagingService
     public void onMessageReceived(RemoteMessage remoteMessage) {
         super.onMessageReceived(remoteMessage);
         System.out.println("Notification about place:\t" + remoteMessage.getNotification().getTitle());
+        // TODO: Create a new notification here
     }
 }

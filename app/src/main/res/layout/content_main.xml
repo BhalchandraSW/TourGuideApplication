@@ -37,9 +37,8 @@
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
             android:orientation="horizontal"
-            android:padding="4dp"
             app:layoutManager="LinearLayoutManager"
-            tools:listitem="@layout/placeitem_card" />
+            tools:listitem="@layout/place_card" />
 
     </RelativeLayout>
 

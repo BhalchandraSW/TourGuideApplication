@@ -27,7 +27,7 @@ import uk.ac.aston.wadekabs.tourguideapplication.model.User;
  */
 public class PlaceItemDetailActivity extends AppCompatActivity {
 
-    private Place mSelectedPlaceItem;
+    private Place mSelectedPlace;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,6 +44,9 @@ public class PlaceItemDetailActivity extends AppCompatActivity {
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
+        String placeId = getIntent().getStringExtra(PlaceItemDetailFragment.SELECTED_PLACE_ID);
+        String list = getIntent().getStringExtra(PlaceItemDetailFragment.SELECTED_LIST);
+
         // savedInstanceState is non-null when there is fragment state
         // saved from previous configurations of this activity
         // (e.g. when rotating the screen from portrait to landscape).
@@ -57,16 +60,18 @@ public class PlaceItemDetailActivity extends AppCompatActivity {
             // Create the detail fragment and add it to the activity
             // using a fragment transaction.
             Bundle arguments = new Bundle();
-            arguments.putInt(PlaceItemDetailFragment.SELECTED_PLACE_ITEM,
-                    getIntent().getIntExtra(PlaceItemDetailFragment.SELECTED_PLACE_ITEM, 0));
+            arguments.putString(PlaceItemDetailFragment.SELECTED_PLACE_ID, placeId);
+            arguments.putString(PlaceItemDetailFragment.SELECTED_LIST, list);
+
             PlaceItemDetailFragment fragment = new PlaceItemDetailFragment();
             fragment.setArguments(arguments);
+
             getSupportFragmentManager().beginTransaction()
                     .add(R.id.placeitem_detail_container, fragment)
                     .commit();
         }
 
-        mSelectedPlaceItem = PlaceContent.nearby().get(getIntent().getIntExtra(PlaceItemDetailFragment.SELECTED_PLACE_ITEM, 0));
+        mSelectedPlace = PlaceContent.getPlace(placeId, list);
     }
 
     @Override
@@ -112,19 +117,25 @@ public class PlaceItemDetailActivity extends AppCompatActivity {
 
     public void onClickFavourite(View view) {
 
-        mSelectedPlaceItem.setFavourite(!mSelectedPlaceItem.isFavourite());
+        mSelectedPlace.setFavourite(!mSelectedPlace.isFavourite());
 
-        if (mSelectedPlaceItem.isFavourite())
-            FirebaseDatabase.getInstance().getReference("favourites").child(User.getUser().getUid()).child(mSelectedPlaceItem.getPlaceId()).setValue(mSelectedPlaceItem.isFavourite());
+        if (mSelectedPlace.isFavourite())
+            FirebaseDatabase.getInstance().getReference("favourites").child(User.getUser().getUid()).child(mSelectedPlace.getPlaceId()).setValue(mSelectedPlace.isFavourite());
         else
-            FirebaseDatabase.getInstance().getReference("favourites").child(User.getUser().getUid()).child(mSelectedPlaceItem.getPlaceId()).removeValue();
+            FirebaseDatabase.getInstance().getReference("favourites").child(User.getUser().getUid()).child(mSelectedPlace.getPlaceId()).removeValue();
 
-        ((ImageView) view).setColorFilter(mSelectedPlaceItem.isFavourite() ? Color.RED : Color.GRAY);
+        ((ImageView) view).setColorFilter(mSelectedPlace.isFavourite() ? Color.RED : Color.GRAY);
     }
 
     public void onClickVisited(View view) {
-        mSelectedPlaceItem.setVisited(!mSelectedPlaceItem.isVisited());
+        mSelectedPlace.setVisited(!mSelectedPlace.isVisited());
 
-        ((ImageView) view).setColorFilter(mSelectedPlaceItem.isVisited() ? Color.GREEN : Color.GRAY);
+        ((ImageView) view).setColorFilter(mSelectedPlace.isVisited() ? Color.GREEN : Color.GRAY);
+    }
+
+    public void onClickWantToVisit(View view) {
+        DatePickerFragment newFragment = new DatePickerFragment();
+        newFragment.setPlace(mSelectedPlace);
+        newFragment.show(getFragmentManager(), "datePicker");
     }
 }

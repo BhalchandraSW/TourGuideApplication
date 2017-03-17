@@ -32,12 +32,14 @@
     <string-array name="pref_type_list_titles">
         <item>Art Gallery</item>
         <item>Museum</item>
+        <item>Natural Feature</item>
         <item>Restaurant</item>
         <item>Zoo</item>
     </string-array>
     <string-array name="pref_type_list_values">
         <item>art_gallery</item>
         <item>museum</item>
+        <item>natural_feature</item>
         <item>restaurant</item>
         <item>zoo</item>
     </string-array>
@@ -56,5 +58,8 @@
     </string>
     <string name="home">Home</string>
     <string name="favourites">Favourites</string>
+    <string name="title_place_list">Places</string>
+    <string name="title_place_detail">Place Detail</string>
+    <string name="image_of_place">placeImageContentDescription</string>
 
 </resources>

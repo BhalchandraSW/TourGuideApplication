@@ -25,12 +25,12 @@ public class PlaceItemDetailFragment extends Fragment {
      * The fragment argument representing the position of place item in place item list that this
      * fragment represents.
      */
-    public static final String SELECTED_PLACE_ITEM = "selected_place_item";
+    public static final String SELECTED_PLACE_ID = "selected_place_id";
+    public static final String SELECTED_LIST = "selected_list";
 
     /**
      * The dummy content this fragment is presenting.
      */
-    private int mPlaceItemPosition;
     private Place mPlaceItem;
 
     /**
@@ -44,17 +44,17 @@ public class PlaceItemDetailFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        if (getArguments().containsKey(SELECTED_PLACE_ITEM)) {
+        if (getArguments().containsKey(SELECTED_PLACE_ID)) {
             // Load the dummy content specified by the fragment
             // arguments. In a real-world scenario, use a Loader
             // to load content from a content provider.
-            mPlaceItemPosition = getArguments().getInt(SELECTED_PLACE_ITEM);
+            String placeId = getArguments().getString(SELECTED_PLACE_ID);
+            String list = getArguments().getString(SELECTED_LIST);
+            mPlaceItem = PlaceContent.getPlace(placeId, list);
 
             Activity activity = this.getActivity();
             CollapsingToolbarLayout appBarLayout = (CollapsingToolbarLayout) activity.findViewById(R.id.toolbar_layout);
             if (appBarLayout != null) {
-                // TODO: Change this to object variable list
-                mPlaceItem = PlaceContent.nearby().get(mPlaceItemPosition);
                 appBarLayout.setTitle(mPlaceItem.getName());
             }
         }

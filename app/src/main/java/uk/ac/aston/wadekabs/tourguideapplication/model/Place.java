@@ -1,5 +1,10 @@
 package uk.ac.aston.wadekabs.tourguideapplication.model;
 
+import android.graphics.Bitmap;
+import android.os.Parcel;
+import android.os.Parcelable;
+
+import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 
@@ -7,7 +12,7 @@ import java.util.Set;
  * Created by Bhalchandra Wadekar on 13/03/2017.
  */
 
-public class Place {
+public class Place implements Parcelable {
 
     private String mPlaceId;
     private PlaceLocation mLocation;
@@ -15,9 +20,12 @@ public class Place {
     private String mAddress;
     private long mPriceLevel = -1; // -1 = unknown price level
     private Map<String, Boolean> mTypes;
+    private Bitmap mPhoto;
 
     private boolean mFavourite;
     private boolean mVisited;
+
+    private Date mWantToVisitDate;
 
     public Place() {
     }
@@ -26,11 +34,34 @@ public class Place {
         this.mPlaceId = placeId;
     }
 
+    protected Place(Parcel in) {
+        mPlaceId = in.readString();
+        mLocation = in.readParcelable(PlaceLocation.class.getClassLoader());
+        mName = in.readString();
+        mAddress = in.readString();
+        mPriceLevel = in.readLong();
+        mPhoto = in.readParcelable(Bitmap.class.getClassLoader());
+        mFavourite = in.readByte() != 0;
+        mVisited = in.readByte() != 0;
+    }
+
+    public static final Creator<Place> CREATOR = new Creator<Place>() {
+        @Override
+        public Place createFromParcel(Parcel in) {
+            return new Place(in);
+        }
+
+        @Override
+        public Place[] newArray(int size) {
+            return new Place[size];
+        }
+    };
+
     public String getPlaceId() {
         return mPlaceId;
     }
 
-    public void setPlaceId(String placeId) {
+    void setPlaceId(String placeId) {
         this.mPlaceId = placeId;
     }
 
@@ -90,7 +121,23 @@ public class Place {
         this.mTypes = types;
     }
 
-    public boolean satisfiesFilter() {
+    public Date getWantToVisitDate() {
+        return mWantToVisitDate;
+    }
+
+    public void setWantToVisitDate(Date wantToVisitDate) {
+        this.mWantToVisitDate = wantToVisitDate;
+    }
+
+    public Bitmap getPhoto() {
+        return mPhoto;
+    }
+
+    public void setPhoto(Bitmap photo) {
+        this.mPhoto = photo;
+    }
+
+    boolean satisfiesFilter() {
 
         if (mPriceLevel == -1 || mPriceLevel == PlaceFilter.getInstance().getPriceLevel()) {
             Set<String> allowedTypes = PlaceFilter.getInstance().getTypes().keySet();
@@ -114,5 +161,22 @@ public class Place {
     @Override
     public String toString() {
         return mName;
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(mPlaceId);
+        dest.writeParcelable(mLocation, flags);
+        dest.writeString(mName);
+        dest.writeString(mAddress);
+        dest.writeLong(mPriceLevel);
+        dest.writeParcelable(mPhoto, flags);
+        dest.writeByte((byte) (mFavourite ? 1 : 0));
+        dest.writeByte((byte) (mVisited ? 1 : 0));
     }
 }

@@ -56,7 +56,7 @@ public class PlaceItemListActivity extends AppCompatActivity implements GoogleAp
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
-        mPlaceItemRecyclerViewAdapter = new PlaceItemRecyclerViewAdapter(PlaceContent.favourites(), mGoogleApiClient);
+        mPlaceItemRecyclerViewAdapter = new PlaceItemRecyclerViewAdapter(PlaceContent.favourites(), mGoogleApiClient, "favourites");
         PlaceContent.addFavouritesObserver(this);
 
         View recyclerView = findViewById(R.id.placeitem_list);

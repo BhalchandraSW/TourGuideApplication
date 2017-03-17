@@ -1,5 +1,11 @@
 package uk.ac.aston.wadekabs.tourguideapplication.backend;
 
+import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.json.gson.GsonFactory;
+import com.google.api.client.util.ArrayMap;
+import com.google.api.services.kgsearch.v1.Kgsearch;
+import com.google.api.services.kgsearch.v1.model.SearchResponse;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.database.ChildEventListener;
@@ -13,6 +19,8 @@ import com.google.maps.PlacesApi;
 import com.google.maps.model.PlaceDetails;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
 import javax.servlet.ServletException;
@@ -27,16 +35,15 @@ import javax.servlet.http.HttpServletResponse;
 public class PlaceDetailsServlet extends HttpServlet {
 
     private static Logger LOG = Logger.getLogger("uk.ac.aston.wadekabs.tourguideapplication.backend.PlaceDetailsServlet");
-    private static final String KEY = "AIzaSyC6EOOcdrhZYb1TgD8xpPlRfPwDHnSddGQ";
-    private static GeoApiContext sContext = new GeoApiContext(new GaeRequestHandler()).setApiKey(KEY);
+    private static final String API_KEY = "AIzaSyC6EOOcdrhZYb1TgD8xpPlRfPwDHnSddGQ";
+    private static GeoApiContext sContext = new GeoApiContext(new GaeRequestHandler()).setApiKey(API_KEY);
 
     @Override
     protected void doGet(HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {
-        super.doGet(req, resp);
 
         // Note: Ensure that the[PRIVATE_KEY_FILENAME].json has read
         // permissions set.
-        FirebaseOptions options = new FirebaseOptions.Builder()
+        final FirebaseOptions options = new FirebaseOptions.Builder()
                 .setServiceAccount(getServletContext().getResourceAsStream("/WEB-INF/Tour Guide Application-87ea06bbf5ec.json"))
                 .setDatabaseUrl("https://tourist-guide-application.firebaseio.com/")
                 .build();
@@ -65,37 +72,50 @@ public class PlaceDetailsServlet extends HttpServlet {
 
                     try {
 
+                        DatabaseReference newPlace = reference.child("details").child(placeId);
+
                         PlaceDetails placeDetails = PlacesApi.placeDetails(sContext, placeId).await();
 
-                        reference.child("details").child(placeId).child("name").setValue(placeDetails.name);
-                        reference.child("details").child(placeId).child("address").setValue(placeDetails.formattedAddress);
-                        reference.child("details").child(placeId).child("priceLevel").setValue(placeDetails.priceLevel);
+                        newPlace.child("name").setValue(placeDetails.name);
+                        newPlace.child("address").setValue(placeDetails.formattedAddress);
+                        newPlace.child("priceLevel").setValue(placeDetails.priceLevel);
 
                         for (String type : placeDetails.types) {
-                            reference.child("details").child(placeId).child("types").child(type).setValue(true);
+                            newPlace.child("types").child(type).setValue(true);
                         }
 
-                        reference.child("details").child(placeId).child("location").child("lat").setValue(placeDetails.geometry.location.lat);
-                        reference.child("details").child(placeId).child("location").child("lng").setValue(placeDetails.geometry.location.lng);
+                        newPlace.child("location").child("lat").setValue(placeDetails.geometry.location.lat);
+                        newPlace.child("location").child("lng").setValue(placeDetails.geometry.location.lng);
+                        
+                        HttpTransport transport = GoogleNetHttpTransport.newTrustedTransport();
+                        com.google.api.client.json.JsonFactory factory = new GsonFactory();
 
-//                        String urlString = "https://kgsearch.googleapis.com/v1/entities:search"
-//                                + "?query=" + URLEncoder.encode(placeDetails.formattedAddress, "utf-8")
-//                                + "&limit=1"
-//                                + "&key=" + KEY;
-//
-//                        URL url = new URL(urlString);
-//
-//                        InputStream is = url.openStream();
-//
-//                        byte[] b = new byte[is.available()];
-//                        is.read(b);
+                        List<String> types = new ArrayList<>();
+                        types.add("Place");
 
+                        Kgsearch kgsearch = new Kgsearch.Builder(transport, factory, null)
+                                .setApplicationName("Bala")
+                                .build();
 
-//                        LOG.info(placeDetails.name + "\n" + new String(b));
-//                        for (Photo photo : placeDetails.photos) {
-//                            reference.child("details").child(placeId).child("photos").child(photo.photoReference).setValue(true);
-//                        }
+                        Kgsearch.Entities.Search search = kgsearch.entities().search()
+                                .setKey(API_KEY)
+                                .setQuery(placeDetails.name)
+                                .setLimit(1)
+                                .setTypes(types);
 
+                        SearchResponse response = search.execute();
+
+                        List itemListElement = response.getItemListElement();
+                        for (Object item : itemListElement) {
+                            ArrayMap detailedDescription = (ArrayMap) ((ArrayMap) ((ArrayMap) item).get("result")).get("detailedDescription");
+                            Object articleBody;
+                            if (detailedDescription != null) {
+                                if ((articleBody = detailedDescription.get("articleBody")) != null) {
+                                    LOG.info("Found description for " + placeId + " with name " + placeDetails.name);
+                                    newPlace.child("description").setValue(String.valueOf(articleBody));
+                                }
+                            }
+                        }
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -118,5 +138,11 @@ public class PlaceDetailsServlet extends HttpServlet {
             public void onCancelled(DatabaseError databaseError) {
             }
         });
+
+        try {
+            resp.sendRedirect(options.getDatabaseUrl() + "/details");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

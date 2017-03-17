@@ -39,10 +39,14 @@ class PhotoTask extends AsyncTask<String, Void, Bitmap> {
         if (result.getStatus().isSuccess()) {
             PlacePhotoMetadataBuffer photoMetadata = result.getPhotoMetadata();
             if (photoMetadata.getCount() > 0 && !isCancelled()) {
+
                 // Get the first bitmap and its attributions.
                 PlacePhotoMetadata photo = photoMetadata.get(0);
                 CharSequence attribution = photo.getAttributions();
+
                 // Load a scaled bitmap for this photo.
+                // TODO: convert dp's to pixels here
+                // TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 14, getResources().getDisplayMetrics());
                 image = photo.getPhoto(mGoogleApiClient).await()
                         .getBitmap();
             }
@@ -57,5 +61,6 @@ class PhotoTask extends AsyncTask<String, Void, Bitmap> {
         super.onPostExecute(bitmap);
         if (mHolder.imageView != null)
             mHolder.imageView.setImageBitmap(bitmap);
+        mHolder.mItem.setPhoto(bitmap);
     }
 }

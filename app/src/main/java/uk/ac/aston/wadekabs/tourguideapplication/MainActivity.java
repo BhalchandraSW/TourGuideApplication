@@ -4,7 +4,9 @@ import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.location.Location;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -17,9 +19,14 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.PagerSnapHelper;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.LruCache;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TextView;
 
+import com.android.volley.toolbox.ImageLoader;
+import com.android.volley.toolbox.NetworkImageView;
+import com.android.volley.toolbox.Volley;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
@@ -52,6 +59,7 @@ import java.util.Observer;
 import uk.ac.aston.wadekabs.tourguideapplication.model.Place;
 import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceContent;
 import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceItem;
+import uk.ac.aston.wadekabs.tourguideapplication.model.User;
 import uk.ac.aston.wadekabs.tourguideapplication.service.LocationAwarenessService;
 
 
@@ -109,20 +117,36 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        // TODO: Show logged in user's username and email in navigation drawer
+        // TODO: Show logged in user's profile picture in navigation drawer
 
-//        TextView userNameTextView = (TextView) navigationView.findViewById(R.id.userNameTextView);
-//        if (userNameTextView != null)
-//            userNameTextView.setText(User.getUser().getDisplayName());
-//
-//        TextView userEmailTextView = (TextView) navigationView.findViewById(R.id.userEmailTextView);
-//        if (userEmailTextView != null)
-//            userEmailTextView.setText(User.getUser().getEmail());
+        TextView userNameTextView = (TextView) navigationView.getHeaderView(0).findViewById(R.id.userNameTextView);
+        userNameTextView.setText(User.getUser().getDisplayName());
 
+        TextView userEmailTextView = (TextView) navigationView.getHeaderView(0).findViewById(R.id.userEmailTextView);
+        userEmailTextView.setText(User.getUser().getEmail());
+
+        NetworkImageView userImageView = (NetworkImageView) navigationView.getHeaderView(0).findViewById(R.id.imageView);
+        Uri uri = User.getUser().getPhotoUrl();
+        if (uri != null)
+            userImageView.setImageUrl(uri.toString(), new ImageLoader(Volley.newRequestQueue(getApplicationContext()), new ImageLoader.ImageCache() {
+
+                private final LruCache<String, Bitmap>
+                        cache = new LruCache<String, Bitmap>(20);
+
+                @Override
+                public Bitmap getBitmap(String url) {
+                    return cache.get(url);
+                }
+
+                @Override
+                public void putBitmap(String url, Bitmap bitmap) {
+                    cache.put(url, bitmap);
+                }
+            }));
         mFilterPreferenceFragment = (FilterPreferenceFragment) getFragmentManager().findFragmentById(R.id.filter);
         getFragmentManager().beginTransaction().hide(mFilterPreferenceFragment).commit();
 
-        mPlaceItemRecyclerViewAdapter = new PlaceItemRecyclerViewAdapter(PlaceContent.nearby(), mGoogleApiClient);
+        mPlaceItemRecyclerViewAdapter = new PlaceItemRecyclerViewAdapter(PlaceContent.nearby(), mGoogleApiClient, "nearby");
         mRecyclerView = (RecyclerView) findViewById(R.id.placeitem_card_list);
         mRecyclerView.setHasFixedSize(true);
         mRecyclerView.setAdapter(mPlaceItemRecyclerViewAdapter);
@@ -130,9 +154,6 @@ public class MainActivity extends AppCompatActivity
         new PagerSnapHelper().attachToRecyclerView(mRecyclerView);
 
         PlaceContent.addNearbyObserver(this);
-
-
-        // FirebaseMessaging.getInstance().subscribeToTopic("test");
 
         String token = FirebaseInstanceId.getInstance().getToken();
         System.out.println("Token:\t" + token);
@@ -472,19 +493,16 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
+    public void onLocationChanged(Location location) {
+    }
+
+    @Override
     public void onConnectionSuspended(int i) {
     }
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
     }
-
-    @Override
-    public void onLocationChanged(Location location) {
-//        FirebaseDatabase.getInstance().getReference("locations").child(User.getUser().getUid()).child("lat").setValue(location.getLatitude());
-//        FirebaseDatabase.getInstance().getReference("locations").child(User.getUser().getUid()).child("lng").setValue(location.getLongitude());
-    }
-
 
     @Override
     public void update(Observable o, Object arg) {

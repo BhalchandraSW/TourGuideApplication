@@ -22,37 +22,40 @@ import uk.ac.aston.wadekabs.tourguideapplication.model.Place;
 
 class PlaceItemRecyclerViewAdapter extends RecyclerView.Adapter<PlaceItemRecyclerViewAdapter.PlaceItemViewHolder> {
 
+    private String type;
     private List<Place> mPlaceItemList;
     private GoogleApiClient mGoogleApiClient;
 
-    PlaceItemRecyclerViewAdapter(List<Place> placeItemList, GoogleApiClient googleApiClient) {
-        mPlaceItemList = placeItemList;
+    PlaceItemRecyclerViewAdapter(List<Place> placeList, GoogleApiClient googleApiClient, String type) {
+        mPlaceItemList = placeList;
         mGoogleApiClient = googleApiClient;
+        this.type = type;
     }
 
     @Override
     public PlaceItemViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         CardView view = (CardView) LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.placeitem_card, parent, false);
+                .inflate(R.layout.place_card, parent, false);
         return new PlaceItemViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(final PlaceItemViewHolder holder, int position) {
+
         holder.mItem = mPlaceItemList.get(position);
         holder.nameTextView.setText(holder.mItem.getName());
         holder.addressTextView.setText(holder.mItem.getAddress());
-
-        System.out.println("Id for photo:\t" + holder.mItem);
 
         new PhotoTask(holder, mGoogleApiClient).execute(holder.mItem.getPlaceId());
 
         holder.mItemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
                 Context context = v.getContext();
                 Intent intent = new Intent(context, PlaceItemDetailActivity.class);
-                intent.putExtra(PlaceItemDetailFragment.SELECTED_PLACE_ITEM, holder.getAdapterPosition());
+                intent.putExtra(PlaceItemDetailFragment.SELECTED_PLACE_ID, holder.mItem.getPlaceId());
+                intent.putExtra(PlaceItemDetailFragment.SELECTED_LIST, type);
 
                 context.startActivity(intent);
             }
@@ -73,7 +76,6 @@ class PlaceItemRecyclerViewAdapter extends RecyclerView.Adapter<PlaceItemRecycle
 
         final TextView nameTextView;
         final TextView addressTextView;
-        final TextView descriptionTextView;
 
         PlaceItemViewHolder(CardView itemView) {
 
@@ -85,7 +87,6 @@ class PlaceItemRecyclerViewAdapter extends RecyclerView.Adapter<PlaceItemRecycle
 
             nameTextView = (TextView) itemView.findViewById(R.id.nameTextView);
             addressTextView = (TextView) itemView.findViewById(R.id.addressTextView);
-            descriptionTextView = (TextView) itemView.findViewById(R.id.descriptionTextView);
         }
     }
 }

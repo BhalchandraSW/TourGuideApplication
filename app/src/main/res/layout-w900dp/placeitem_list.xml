@@ -25,7 +25,7 @@
         android:layout_height="match_parent"
         app:layoutManager="LinearLayoutManager"
         tools:context=".PlaceItemListActivity"
-        tools:listitem="@layout/placeitem_card" />
+        tools:listitem="@layout/place_card" />
 
     <FrameLayout
         android:id="@+id/placeitem_detail_container"
