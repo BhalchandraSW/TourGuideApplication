@@ -2,14 +2,12 @@ package uk.ac.aston.wadekabs.tourguideapplication;
 
 import android.app.FragmentTransaction;
 import android.content.Intent;
-import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.GravityCompat;
@@ -29,15 +27,7 @@ import com.android.volley.toolbox.NetworkImageView;
 import com.android.volley.toolbox.Volley;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.PendingResult;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Status;
-import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.LocationSettingsRequest;
-import com.google.android.gms.location.LocationSettingsResult;
-import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.location.places.Places;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -66,7 +56,7 @@ import uk.ac.aston.wadekabs.tourguideapplication.service.LocationAwarenessServic
 // TODO: When internet is not available
 // TODO: Do not check location here instead use LocationAwarenessService
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener, Observer {
+        implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleApiClient.OnConnectionFailedListener, Observer {
 
     private static final int REQUEST_CODE_ACCESS_FINE_LOCATION = 1;
     private static final int REQUEST_CHECK_SETTINGS = 2;
@@ -93,6 +83,11 @@ public class MainActivity extends AppCompatActivity
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        String fid = FirebaseInstanceId.getInstance().getId();
+        String fid2 = FirebaseInstanceId.getInstance().getId();
+
+        System.out.println("equals?" + fid.equals(fid2));
 
         System.out.println("onCreate: called\tsavedInstanceState: " + savedInstanceState);
 
@@ -125,24 +120,47 @@ public class MainActivity extends AppCompatActivity
         TextView userEmailTextView = (TextView) navigationView.getHeaderView(0).findViewById(R.id.userEmailTextView);
         userEmailTextView.setText(User.getUser().getEmail());
 
+
         NetworkImageView userImageView = (NetworkImageView) navigationView.getHeaderView(0).findViewById(R.id.imageView);
+
+//        RoundedBitmapDrawable profilePicture = null;
+
         Uri uri = User.getUser().getPhotoUrl();
-        if (uri != null)
-            userImageView.setImageUrl(uri.toString(), new ImageLoader(Volley.newRequestQueue(getApplicationContext()), new ImageLoader.ImageCache() {
 
-                private final LruCache<String, Bitmap>
-                        cache = new LruCache<String, Bitmap>(20);
+//        if (uri != null) {
+//            try {
+//                profilePicture = RoundedBitmapDrawableFactory.create(getResources(), new URL(uri.toString()).openStream());
+//                profilePicture.setCircular(true);
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//
+//        if (profilePicture != null) {
+//            userImageView.setImageBitmap(profilePicture.getBitmap());
+//        }
 
-                @Override
-                public Bitmap getBitmap(String url) {
-                    return cache.get(url);
-                }
+        if (uri != null) {
 
-                @Override
-                public void putBitmap(String url, Bitmap bitmap) {
-                    cache.put(url, bitmap);
-                }
-            }));
+            userImageView.setImageUrl(uri.toString(),
+
+                    new ImageLoader(Volley.newRequestQueue(getApplicationContext()), new ImageLoader.ImageCache() {
+
+                        private final LruCache<String, Bitmap>
+                                cache = new LruCache<>(20);
+
+                        @Override
+                        public Bitmap getBitmap(String url) {
+                            return cache.get(url);
+                        }
+
+                        @Override
+                        public void putBitmap(String url, Bitmap bitmap) {
+                            cache.put(url, bitmap);
+                        }
+                    }));
+        }
+
         mFilterPreferenceFragment = (FilterPreferenceFragment) getFragmentManager().findFragmentById(R.id.filter);
         getFragmentManager().beginTransaction().hide(mFilterPreferenceFragment).commit();
 
@@ -154,6 +172,7 @@ public class MainActivity extends AppCompatActivity
         new PagerSnapHelper().attachToRecyclerView(mRecyclerView);
 
         PlaceContent.addNearbyObserver(this);
+
 
         String token = FirebaseInstanceId.getInstance().getToken();
         System.out.println("Token:\t" + token);
@@ -185,19 +204,9 @@ public class MainActivity extends AppCompatActivity
      */
     protected synchronized void buildGoogleApiClient() {
         mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addApi(LocationServices.API)
                 .addApi(Places.GEO_DATA_API)
                 .enableAutoManage(this, this)
-                .addConnectionCallbacks(this)
                 .build();
-        createLocationRequest();
-    }
-
-    protected void createLocationRequest() {
-        mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(10000);
-        mLocationRequest.setFastestInterval(5000);
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
     }
 
     @Override
@@ -208,20 +217,6 @@ public class MainActivity extends AppCompatActivity
         } else {
             super.onBackPressed();
         }
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        if (mGoogleApiClient.isConnected())
-            stopLocationUpdates();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if (mGoogleApiClient.isConnected())
-            startLocationUpdates();
     }
 
     private void animateToFirstPlace() {
@@ -427,79 +422,7 @@ public class MainActivity extends AppCompatActivity
                 break;
         }
     }
-
-    @Override
-    public void onConnected(@Nullable Bundle bundle) {
-
-        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
-                .addLocationRequest(mLocationRequest);
-
-        final PendingResult<LocationSettingsResult> result =
-                LocationServices.SettingsApi.checkLocationSettings(mGoogleApiClient,
-                        builder.build());
-
-        result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
-            @Override
-            public void onResult(@NonNull LocationSettingsResult locationSettingsResult) {
-                final Status status = locationSettingsResult.getStatus();
-
-                switch (status.getStatusCode()) {
-                    case LocationSettingsStatusCodes.SUCCESS:
-                        // All location settings are satisfied. The client can
-                        // initialize location requests here.
-                        startLocationUpdates();
-                        break;
-                    case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
-                        // Location settings are not satisfied, but this can be fixed
-                        // by showing the user a dialog.
-                        try {
-                            // Show the dialog by calling startResolutionForResult(),
-                            // and check the result in onActivityResult().
-                            status.startResolutionForResult(
-                                    MainActivity.this,
-                                    REQUEST_CHECK_SETTINGS);
-                        } catch (IntentSender.SendIntentException e) {
-                            // Ignore the error.
-                            e.printStackTrace();
-                        }
-                        break;
-                    case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
-                        // Location settings are not satisfied. However, we have no way
-                        // to fix the settings so we won't show the dialog.
-                        break;
-                }
-            }
-        });
-    }
-
-    protected void startLocationUpdates() {
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
-        LocationServices.FusedLocationApi.requestLocationUpdates(
-                mGoogleApiClient, mLocationRequest, this);
-    }
-
-    protected void stopLocationUpdates() {
-        LocationServices.FusedLocationApi.removeLocationUpdates(
-                mGoogleApiClient, this);
-    }
-
-    @Override
-    public void onLocationChanged(Location location) {
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-    }
-
+    
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
     }

@@ -17,6 +17,7 @@ import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.iid.FirebaseInstanceId;
 
 public class LocationAwarenessService extends Service implements GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks, LocationListener {
 
@@ -82,7 +83,8 @@ public class LocationAwarenessService extends Service implements GoogleApiClient
 
     @Override
     public void onLocationChanged(Location location) {
-        FirebaseDatabase.getInstance().getReference("locations").child("bCMpVc8eKRRPIR6X8kuoqAZeE2D2").child("lat").setValue(location.getLatitude());
-        FirebaseDatabase.getInstance().getReference("locations").child("bCMpVc8eKRRPIR6X8kuoqAZeE2D2").child("lng").setValue(location.getLongitude());
+        String id = FirebaseInstanceId.getInstance().getId();
+        FirebaseDatabase.getInstance().getReference("locations").child(id).child("lat").setValue(location.getLatitude());
+        FirebaseDatabase.getInstance().getReference("locations").child(id).child("lng").setValue(location.getLongitude());
     }
 }
