@@ -8,18 +8,26 @@ import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.GravityCompat;
+import android.support.v4.view.PagerAdapter;
+import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.PagerSnapHelper;
-import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.LruCache;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.android.volley.toolbox.ImageLoader;
@@ -27,7 +35,6 @@ import com.android.volley.toolbox.NetworkImageView;
 import com.android.volley.toolbox.Volley;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.places.Places;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -54,40 +61,36 @@ import uk.ac.aston.wadekabs.tourguideapplication.service.LocationAwarenessServic
 
 
 // TODO: When internet is not available
-// TODO: Do not check location here instead use LocationAwarenessService
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleApiClient.OnConnectionFailedListener, Observer {
+        implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleApiClient.OnConnectionFailedListener, Observer, ViewPager.OnPageChangeListener {
 
     private static final int REQUEST_CODE_ACCESS_FINE_LOCATION = 1;
-    private static final int REQUEST_CHECK_SETTINGS = 2;
-
-    private static final String MAP_BOTTOM_PADDING = "map_bottom_padding";
 
     private GoogleMap mMap;
-    private int mMapBottonPadding;
 
-    private GoogleApiClient mGoogleApiClient;
+    private static GoogleApiClient mGoogleApiClient;
     private FilterPreferenceFragment mFilterPreferenceFragment;
-
-    private LocationRequest mLocationRequest;
 
     private ClusterManager<PlaceItem> mClusterManager;
 
     private List<Circle> mCircleList = new ArrayList<>();
 
-    private RecyclerView mRecyclerView;
-    private PlaceItemRecyclerViewAdapter mPlaceItemRecyclerViewAdapter;
+    /**
+     * The pager widget, which handles animation and allows swiping horizontally to access previous
+     * and next wizard steps.
+     */
+    private ViewPager mPager;
+
+    /**
+     * The pager adapter, which provides the pages to the view pager widget.
+     */
+    private PagerAdapter mPagerAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        String fid = FirebaseInstanceId.getInstance().getId();
-        String fid2 = FirebaseInstanceId.getInstance().getId();
-
-        System.out.println("equals?" + fid.equals(fid2));
 
         System.out.println("onCreate: called\tsavedInstanceState: " + savedInstanceState);
 
@@ -115,17 +118,17 @@ public class MainActivity extends AppCompatActivity
         // TODO: Show logged in user's profile picture in navigation drawer
 
         TextView userNameTextView = (TextView) navigationView.getHeaderView(0).findViewById(R.id.userNameTextView);
-        userNameTextView.setText(User.getUser().getDisplayName());
+        // userNameTextView.setText(User.getUser().getDisplayName());
 
         TextView userEmailTextView = (TextView) navigationView.getHeaderView(0).findViewById(R.id.userEmailTextView);
-        userEmailTextView.setText(User.getUser().getEmail());
+        // userEmailTextView.setText(User.getUser().getEmail());
 
 
         NetworkImageView userImageView = (NetworkImageView) navigationView.getHeaderView(0).findViewById(R.id.imageView);
 
 //        RoundedBitmapDrawable profilePicture = null;
 
-        Uri uri = User.getUser().getPhotoUrl();
+        Uri uri = User.getUser() == null ? null : User.getUser().getPhotoUrl();
 
 //        if (uri != null) {
 //            try {
@@ -164,38 +167,20 @@ public class MainActivity extends AppCompatActivity
         mFilterPreferenceFragment = (FilterPreferenceFragment) getFragmentManager().findFragmentById(R.id.filter);
         getFragmentManager().beginTransaction().hide(mFilterPreferenceFragment).commit();
 
-        mPlaceItemRecyclerViewAdapter = new PlaceItemRecyclerViewAdapter(PlaceContent.nearby(), mGoogleApiClient, "nearby");
-        mRecyclerView = (RecyclerView) findViewById(R.id.placeitem_card_list);
-        mRecyclerView.setHasFixedSize(true);
-        mRecyclerView.setAdapter(mPlaceItemRecyclerViewAdapter);
-
-        new PagerSnapHelper().attachToRecyclerView(mRecyclerView);
-
         PlaceContent.addNearbyObserver(this);
 
-
+        // TODO: Check whether this code is actually needed
         String token = FirebaseInstanceId.getInstance().getToken();
         System.out.println("Token:\t" + token);
 
-//        LocationAwarenessService service = new LocationAwarenessService();
         Intent intent = new Intent(this, LocationAwarenessService.class);
         startService(intent);
 
-
-    }
-
-    @Override
-    protected void onRestoreInstanceState(Bundle savedInstanceState) {
-        super.onRestoreInstanceState(savedInstanceState);
-
-        System.out.println("onRestoreInstaceState: called");
-        mMapBottonPadding = savedInstanceState.getInt(MAP_BOTTOM_PADDING);
-    }
-
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putInt(MAP_BOTTOM_PADDING, mMapBottonPadding);
+        // Instantiate a ViewPager and a PagerAdapter.
+        mPager = (ViewPager) findViewById(R.id.place_summary_pager);
+        mPagerAdapter = new PlaceSummaryPagerAdapter(getSupportFragmentManager());
+        mPager.setAdapter(mPagerAdapter);
+        mPager.addOnPageChangeListener(this);
     }
 
     /**
@@ -219,8 +204,13 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    // TODO: Check why this is not working
     private void animateToFirstPlace() {
+
         if (mMap != null && PlaceContent.nearby().size() > 0) {
+
+            System.out.println("Animating to first place");
+
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(PlaceContent.nearby().get(0).getLocation().latLng(), 15.0f));
         }
     }
@@ -285,26 +275,6 @@ public class MainActivity extends AppCompatActivity
 
         mMap = googleMap;
 
-        if (mMapBottonPadding > 0) {
-            mMap.setPadding(0, 0, 0, mMapBottonPadding);
-        }
-
-        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
-            @Override
-            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-
-                super.onScrolled(recyclerView, dx, dy);
-
-                mMapBottonPadding = recyclerView.getMeasuredHeight();
-                mMap.setPadding(0, 0, 0, mMapBottonPadding);
-
-                if (PlaceContent.nearby().size() > 0) {
-                    int i = recyclerView.computeHorizontalScrollOffset() / (recyclerView.computeHorizontalScrollRange() / PlaceContent.nearby().size());
-                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(PlaceContent.nearby().get(i).getLocation().latLng(), 15.0f));
-                }
-            }
-        });
-
         UiSettings uiSettings = mMap.getUiSettings();
         uiSettings.setMapToolbarEnabled(false);
 
@@ -324,7 +294,8 @@ public class MainActivity extends AppCompatActivity
             @Override
             public boolean onClusterItemClick(PlaceItem selectedPlaceItem) {
                 // TODO: Make sure this is synced with correct place item list.
-                mRecyclerView.smoothScrollToPosition(PlaceContent.nearby().indexOf(selectedPlaceItem.getPlace()));
+                // mRecyclerView.smoothScrollToPosition(PlaceContent.nearby().indexOf(selectedPlaceItem.getPlace()));
+                mPager.setCurrentItem(PlaceContent.nearby().indexOf(selectedPlaceItem.getPlace()), true);
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(selectedPlaceItem.getPosition(), 15.0f));
                 return true;
             }
@@ -422,14 +393,14 @@ public class MainActivity extends AppCompatActivity
                 break;
         }
     }
-    
+
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
     }
 
     @Override
     public void update(Observable o, Object arg) {
-        mPlaceItemRecyclerViewAdapter.notifyDataSetChanged();
+        mPagerAdapter.notifyDataSetChanged();
         updateUI();
     }
 
@@ -444,5 +415,71 @@ public class MainActivity extends AppCompatActivity
         mCircleList.clear();
         for (Place place : PlaceContent.nearby())
             mCircleList.add(mMap.addCircle(new CircleOptions().center(place.getLocation().latLng()).visible(false)));
+    }
+
+    @Override
+    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+
+    }
+
+    @Override
+    public void onPageSelected(int position) {
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(PlaceContent.nearby().get(position).getLocation().latLng(), 15.0f));
+    }
+
+    @Override
+    public void onPageScrollStateChanged(int state) {
+
+    }
+
+    public static class PlaceSummaryFragment extends Fragment {
+
+        public static final String SELECTED_PLACE_INDEX = "selected_place_index";
+
+        @Nullable
+        @Override
+        public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+
+            Bundle args = getArguments();
+            int i = args.getInt(SELECTED_PLACE_INDEX);
+            Place place = PlaceContent.nearby().get(i);
+
+            View view = inflater.inflate(R.layout.place_summary, container, false);
+
+            ImageView photo = (ImageView) view.findViewById(R.id.photo);
+            new PhotoTask(photo, MainActivity.mGoogleApiClient).execute(place.getPlaceId());
+
+            TextView name = (TextView) view.findViewById(R.id.name);
+            name.setText(place.getName());
+
+            TextView address = (TextView) view.findViewById(R.id.address);
+            address.setText(place.getAddress());
+
+            return view;
+        }
+    }
+
+    private class PlaceSummaryPagerAdapter extends FragmentStatePagerAdapter {
+
+        PlaceSummaryPagerAdapter(FragmentManager fm) {
+            super(fm);
+        }
+
+        @Override
+        public Fragment getItem(int position) {
+
+            Bundle args = new Bundle();
+            args.putInt(PlaceSummaryFragment.SELECTED_PLACE_INDEX, position);
+
+            PlaceSummaryFragment fragment = new PlaceSummaryFragment();
+            fragment.setArguments(args);
+
+            return fragment;
+        }
+
+        @Override
+        public int getCount() {
+            return PlaceContent.nearby().size();
+        }
     }
 }

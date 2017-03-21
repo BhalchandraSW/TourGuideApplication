@@ -2,6 +2,7 @@ package uk.ac.aston.wadekabs.tourguideapplication;
 
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
+import android.widget.ImageView;
 
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.places.PlacePhotoMetadata;
@@ -15,12 +16,23 @@ import com.google.android.gms.location.places.Places;
 
 class PhotoTask extends AsyncTask<String, Void, Bitmap> {
 
-    private final PlaceItemRecyclerViewAdapter.PlaceItemViewHolder mHolder;
+    private PlaceItemRecyclerViewAdapter.PlaceItemViewHolder mHolder = null;
+    private ImageView mPhoto = null;
     private GoogleApiClient mGoogleApiClient;
 
     PhotoTask(PlaceItemRecyclerViewAdapter.PlaceItemViewHolder holder, GoogleApiClient googleApiClient) {
         mHolder = holder;
         mGoogleApiClient = googleApiClient;
+    }
+
+    PhotoTask(ImageView photo, GoogleApiClient googleApiClient) {
+        mPhoto = photo;
+        mGoogleApiClient = googleApiClient;
+    }
+
+    @Override
+    protected void onPreExecute() {
+        super.onPreExecute();
     }
 
     @Override
@@ -59,8 +71,16 @@ class PhotoTask extends AsyncTask<String, Void, Bitmap> {
     @Override
     protected void onPostExecute(Bitmap bitmap) {
         super.onPostExecute(bitmap);
-        if (mHolder.imageView != null)
-            mHolder.imageView.setImageBitmap(bitmap);
-        mHolder.mItem.setPhoto(bitmap);
+
+        if (mHolder != null) {
+
+            if (mHolder.imageView != null)
+                mHolder.imageView.setImageBitmap(bitmap);
+            mHolder.mItem.setPhoto(bitmap);
+        }
+
+        if (mPhoto != null) {
+            mPhoto.setImageBitmap(bitmap);
+        }
     }
 }

@@ -32,7 +32,7 @@ public class FilterPreferenceFragment extends PreferenceFragment implements Shar
 
     private ListPreference costPreference;
     private MultiSelectListPreference typePreference;
-    
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,41 +48,45 @@ public class FilterPreferenceFragment extends PreferenceFragment implements Shar
         typePreference.setValues(getPreferenceScreen().getSharedPreferences().getStringSet(TYPE_PREFERENCE, new HashSet<String>()));
         // TODO: Set summary for type preference
 
-        FirebaseDatabase.getInstance().getReference("preferences").child(User.getUser().getUid()).child("priceLevel").addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot costSnapshot) {
-                int cost = costSnapshot.getValue() != null ? Integer.valueOf(costSnapshot.getValue().toString()) : 2;
-                costPreference.setValue(String.valueOf(cost));
-                costPreference.setSummary(costArray[cost]);
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-
-        FirebaseDatabase.getInstance().getReference("preferences").child(User.getUser().getUid()).child("types").addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-
-                List<String> selectedTypes = new ArrayList<>();
-
-                for (DataSnapshot typeSnapshot : dataSnapshot.getChildren()) {
-                    String type = typeSnapshot.getKey();
-                    type = type.replace('_', ' ');
-                    type = StringUtils.capitaliseAllWords(type);
-                    selectedTypes.add(type);
+        if (User.getUser() != null) {
+            FirebaseDatabase.getInstance().getReference("preferences").child(User.getUser().getUid()).child("priceLevel").addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot costSnapshot) {
+                    int cost = costSnapshot.getValue() != null ? Integer.valueOf(costSnapshot.getValue().toString()) : 2;
+                    costPreference.setValue(String.valueOf(cost));
+                    costPreference.setSummary(costArray[cost]);
                 }
 
-                typePreference.setSummary(TextUtils.join(", ", selectedTypes));
-            }
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
+                }
+            });
+        }
 
-            }
-        });
+        if (User.getUser() != null) {
+            FirebaseDatabase.getInstance().getReference("preferences").child(User.getUser().getUid()).child("types").addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+
+                    List<String> selectedTypes = new ArrayList<>();
+
+                    for (DataSnapshot typeSnapshot : dataSnapshot.getChildren()) {
+                        String type = typeSnapshot.getKey();
+                        type = type.replace('_', ' ');
+                        type = StringUtils.capitaliseAllWords(type);
+                        selectedTypes.add(type);
+                    }
+
+                    typePreference.setSummary(TextUtils.join(", ", selectedTypes));
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            });
+        }
     }
 
     @Override

@@ -42,26 +42,28 @@ public class PlaceFilter extends Observable {
 
             sInstance = new PlaceFilter();
 
-            sDatabase.child("preferences").child(User.getUser().getUid()).addValueEventListener(new ValueEventListener() {
+            if (User.getUser() != null) {
+                sDatabase.child("preferences").child(User.getUser().getUid()).addValueEventListener(new ValueEventListener() {
 
-                @Override
-                public void onDataChange(DataSnapshot placeFilterSnapshot) {
+                    @Override
+                    public void onDataChange(DataSnapshot placeFilterSnapshot) {
 
-                    sInstance = placeFilterSnapshot.getValue(PlaceFilter.class);
+                        sInstance = placeFilterSnapshot.getValue(PlaceFilter.class);
 
-                    if (sInstance != null) {
+                        if (sInstance != null) {
 
-                        PlaceContent.addFilter(sInstance);
+                            PlaceContent.addFilter(sInstance);
 
-                        sInstance.setChanged();
-                        sInstance.notifyObservers();
+                            sInstance.setChanged();
+                            sInstance.notifyObservers();
+                        }
                     }
-                }
 
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
-                }
-            });
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                    }
+                });
+            }
         }
 
         return sInstance;

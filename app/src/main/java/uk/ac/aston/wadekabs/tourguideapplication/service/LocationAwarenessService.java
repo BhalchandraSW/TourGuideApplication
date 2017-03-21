@@ -30,6 +30,9 @@ public class LocationAwarenessService extends Service implements GoogleApiClient
 
         buildGoogleApiClient();
         mGoogleApiClient.connect();
+
+
+        System.out.println("Location service created.");
     }
 
     /**
@@ -67,6 +70,7 @@ public class LocationAwarenessService extends Service implements GoogleApiClient
             //                                          int[] grantResults)
             // to handle the case where the user grants the permission. See the documentation
             // for ActivityCompat#requestPermissions for more details.
+            System.out.println("Returning from starting location updates.");
             return;
         }
         LocationServices.FusedLocationApi.requestLocationUpdates(
@@ -83,6 +87,9 @@ public class LocationAwarenessService extends Service implements GoogleApiClient
 
     @Override
     public void onLocationChanged(Location location) {
+
+        System.out.println("OnLocationChanged:\t" + location);
+
         String id = FirebaseInstanceId.getInstance().getId();
         FirebaseDatabase.getInstance().getReference("locations").child(id).child("lat").setValue(location.getLatitude());
         FirebaseDatabase.getInstance().getReference("locations").child(id).child("lng").setValue(location.getLongitude());

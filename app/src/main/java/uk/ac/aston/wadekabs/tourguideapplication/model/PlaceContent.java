@@ -6,6 +6,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.iid.FirebaseInstanceId;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -61,6 +62,7 @@ public class PlaceContent extends Observable implements Observer {
     }
 
     public static void addNearbyObserver(Observer observer) {
+        nearby();
         sNearby.addObserver(observer);
     }
 
@@ -73,7 +75,8 @@ public class PlaceContent extends Observable implements Observer {
         if (mPlaceList == null) {
             mPlaceList = new ArrayList<>();
             mListener = new PlaceChildEventListener(mPlaceList);
-            sDatabase.child(mType).child(User.getUser().getUid()).addChildEventListener(mListener);
+            // TODO: This is probably not applicable for details node.
+            sDatabase.child(mType).child(FirebaseInstanceId.getInstance().getId()).addChildEventListener(mListener);
         }
 
         return mPlaceList;
@@ -108,8 +111,10 @@ public class PlaceContent extends Observable implements Observer {
             notifyObservers();
         }
 
-        sDatabase.child(mType).child(User.getUser().getUid()).removeEventListener(mListener);
-        sDatabase.child(mType).child(User.getUser().getUid()).addChildEventListener(mListener);
+        String id = FirebaseInstanceId.getInstance().getId();
+
+        sDatabase.child(mType).child(id).removeEventListener(mListener);
+        sDatabase.child(mType).child(id).addChildEventListener(mListener);
     }
 
     private class PlaceChildEventListener implements ChildEventListener {
