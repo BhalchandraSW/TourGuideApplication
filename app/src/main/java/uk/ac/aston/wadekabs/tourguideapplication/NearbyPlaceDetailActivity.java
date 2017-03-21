@@ -58,7 +58,6 @@ public class NearbyPlaceDetailActivity extends AppCompatActivity implements Obse
         }
 
         String placeId = getIntent().getStringExtra(PlaceItemDetailFragment.SELECTED_PLACE_ID);
-        String list = getIntent().getStringExtra(PlaceItemDetailFragment.SELECTED_LIST);
 
         // savedInstanceState is non-null when there is fragment state
         // saved from previous configurations of this activity
@@ -74,7 +73,6 @@ public class NearbyPlaceDetailActivity extends AppCompatActivity implements Obse
             // using a fragment transaction.
             Bundle arguments = new Bundle();
             arguments.putString(PlaceItemDetailFragment.SELECTED_PLACE_ID, placeId);
-            arguments.putString(PlaceItemDetailFragment.SELECTED_LIST, list);
 
             PlaceItemDetailFragment fragment = new PlaceItemDetailFragment();
             fragment.setArguments(arguments);
@@ -84,16 +82,11 @@ public class NearbyPlaceDetailActivity extends AppCompatActivity implements Obse
                     .commit();
         }
 
-        mSelectedPlace = PlaceContent.getPlace(placeId, list);
+        mSelectedPlace = PlaceContent.getPlace(placeId);
         if (mSelectedPlace != null) {
             mSelectedPlace.addObserver(this);
         }
 
-        // Instantiate a ViewPager and a PagerAdapter.
-        /*
-      The pager widget, which handles animation and allows swiping horizontally to access previous
-      and next wizard steps.
-     */
         ViewPager mPager = (ViewPager) findViewById(R.id.place_photos_pager);
         mPagerAdapter = new PlacePhotoPagerAdapter(getSupportFragmentManager());
         mPager.setAdapter(mPagerAdapter);
@@ -148,8 +141,6 @@ public class NearbyPlaceDetailActivity extends AppCompatActivity implements Obse
             FirebaseDatabase.getInstance().getReference("favourites").child(User.getUser().getUid()).child(mSelectedPlace.getPlaceId()).setValue(mSelectedPlace.isFavourite());
         else
             FirebaseDatabase.getInstance().getReference("favourites").child(User.getUser().getUid()).child(mSelectedPlace.getPlaceId()).removeValue();
-
-        ((ImageView) view).setColorFilter(mSelectedPlace.isFavourite() ? Color.RED : Color.GRAY);
     }
 
     public void onClickVisited(View view) {

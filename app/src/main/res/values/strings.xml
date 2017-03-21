@@ -15,6 +15,7 @@
     <!-- Strings related to Settings -->
 
     <string-array name="pref_budget_list_titles">
+        <item>Unknown</item>
         <item>Free</item>
         <item>Inexpensive</item>
         <item>Moderate</item>
@@ -22,6 +23,7 @@
         <item>Very Expensive</item>
     </string-array>
     <string-array name="pref_budget_list_values">
+        <item>-1</item>
         <item>0</item>
         <item>1</item>
         <item>2</item>

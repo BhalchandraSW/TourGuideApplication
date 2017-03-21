@@ -2,7 +2,6 @@ package uk.ac.aston.wadekabs.tourguideapplication;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.support.design.widget.AppBarLayout;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -47,45 +46,26 @@ public class PlaceItemDetailFragment extends Fragment {
             // arguments. In a real-world scenario, use a Loader
             // to load content from a content provider.
             String placeId = getArguments().getString(SELECTED_PLACE_ID);
-            String list = getArguments().getString(SELECTED_LIST);
-            mPlace = PlaceContent.getPlace(placeId, list);
+            mPlace = PlaceContent.getPlace(placeId);
 
             Activity activity = this.getActivity();
-
-            AppBarLayout appBarLayout = (AppBarLayout) activity.findViewById(R.id.app_bar);
             activity.setTitle(mPlace.getName());
-//            CollapsingToolbarLayout appBarLayout = (CollapsingToolbarLayout) activity.findViewById(R.id.toolbar_layout);
-//            if (appBarLayout != null) {
-//                appBarLayout.setTitle(mPlaceItem.getName());
-//            }
         }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
         View rootView = inflater.inflate(R.layout.nearby_place_detail, container, false);
 
-        // Show the dummy content as text in a TextView.
-        if (mPlace != null) {
+        TextView address = (TextView) rootView.findViewById(R.id.address);
+        address.setText(mPlace.getAddress());
 
-            ((TextView) rootView.findViewById(R.id.address)).setText(mPlace.getAddress());
+        String[] priceLevels = getResources().getStringArray(R.array.pref_budget_list_titles);
 
-            TextView priceLevel = (TextView) rootView.findViewById(R.id.price_level);
-
-            String[] priceLevels = getResources().getStringArray(R.array.pref_budget_list_titles);
-            if (mPlace.getPriceLevel() > 0) {
-                priceLevel.setText(priceLevels[(int) mPlace.getPriceLevel()]);
-            } else {
-                priceLevel.setVisibility(View.INVISIBLE);
-            }
-
-//            ImageView favouriteView = (ImageView) rootView.findViewById(R.id.favourite);
-//            favouriteView.setColorFilter(mPlaceItem.isFavourite() ? Color.RED : Color.GRAY);
-//
-//            ImageView visitedView = (ImageView) rootView.findViewById(R.id.visited);
-//            visitedView.setColorFilter(mPlaceItem.isVisited() ? Color.GREEN : Color.GRAY);
-        }
+        TextView priceLevel = (TextView) rootView.findViewById(R.id.price_level);
+        priceLevel.setText(priceLevels[(int) mPlace.getPriceLevel() + 1]);
 
         return rootView;
     }
