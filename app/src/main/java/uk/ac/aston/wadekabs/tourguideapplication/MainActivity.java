@@ -8,7 +8,6 @@ import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
@@ -22,12 +21,9 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.LruCache;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.android.volley.toolbox.ImageLoader;
@@ -68,7 +64,7 @@ public class MainActivity extends AppCompatActivity
 
     private GoogleMap mMap;
 
-    private static GoogleApiClient mGoogleApiClient;
+    private GoogleApiClient mGoogleApiClient;
     private FilterPreferenceFragment mFilterPreferenceFragment;
 
     private ClusterManager<PlaceItem> mClusterManager;
@@ -79,7 +75,7 @@ public class MainActivity extends AppCompatActivity
      * The pager widget, which handles animation and allows swiping horizontally to access previous
      * and next wizard steps.
      */
-    private ViewPager mPager;
+    private static ViewPager mPager;
 
     /**
      * The pager adapter, which provides the pages to the view pager widget.
@@ -181,6 +177,18 @@ public class MainActivity extends AppCompatActivity
         mPagerAdapter = new PlaceSummaryPagerAdapter(getSupportFragmentManager());
         mPager.setAdapter(mPagerAdapter);
         mPager.addOnPageChangeListener(this);
+        mPager.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                System.out.println("OnClick registered");
+
+                int position = mPager.getCurrentItem();
+                Intent intent = new Intent(MainActivity.this, PlaceItemDetailActivity.class);
+                intent.putExtra(PlaceItemDetailFragment.SELECTED_PLACE_ID, position);
+                intent.putExtra(PlaceItemDetailFragment.SELECTED_LIST, "nearby");
+                startActivity(intent);
+            }
+        });
     }
 
     /**
@@ -192,6 +200,7 @@ public class MainActivity extends AppCompatActivity
                 .addApi(Places.GEO_DATA_API)
                 .enableAutoManage(this, this)
                 .build();
+        PlaceContent.setsGoogleApiClient(mGoogleApiClient);
     }
 
     @Override
@@ -294,9 +303,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             public boolean onClusterItemClick(PlaceItem selectedPlaceItem) {
                 // TODO: Make sure this is synced with correct place item list.
-                // mRecyclerView.smoothScrollToPosition(PlaceContent.nearby().indexOf(selectedPlaceItem.getPlace()));
                 mPager.setCurrentItem(PlaceContent.nearby().indexOf(selectedPlaceItem.getPlace()), true);
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(selectedPlaceItem.getPosition(), 15.0f));
                 return true;
             }
         });
@@ -431,34 +438,7 @@ public class MainActivity extends AppCompatActivity
     public void onPageScrollStateChanged(int state) {
 
     }
-
-    public static class PlaceSummaryFragment extends Fragment {
-
-        public static final String SELECTED_PLACE_INDEX = "selected_place_index";
-
-        @Nullable
-        @Override
-        public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-
-            Bundle args = getArguments();
-            int i = args.getInt(SELECTED_PLACE_INDEX);
-            Place place = PlaceContent.nearby().get(i);
-
-            View view = inflater.inflate(R.layout.place_summary, container, false);
-
-            ImageView photo = (ImageView) view.findViewById(R.id.photo);
-            new PhotoTask(photo, MainActivity.mGoogleApiClient).execute(place.getPlaceId());
-
-            TextView name = (TextView) view.findViewById(R.id.name);
-            name.setText(place.getName());
-
-            TextView address = (TextView) view.findViewById(R.id.address);
-            address.setText(place.getAddress());
-
-            return view;
-        }
-    }
-
+    
     private class PlaceSummaryPagerAdapter extends FragmentStatePagerAdapter {
 
         PlaceSummaryPagerAdapter(FragmentManager fm) {

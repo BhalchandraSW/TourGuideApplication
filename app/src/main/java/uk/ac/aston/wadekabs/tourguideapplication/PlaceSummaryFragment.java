@@ -1,5 +1,6 @@
 package uk.ac.aston.wadekabs.tourguideapplication;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -26,12 +27,25 @@ public class PlaceSummaryFragment extends Fragment {
 
         Bundle args = getArguments();
         int i = args.getInt(SELECTED_PLACE_INDEX);
-        Place place = PlaceContent.nearby().get(i);
+        final Place place = PlaceContent.nearby().get(i);
 
         View view = inflater.inflate(R.layout.place_summary, container, false);
 
+        view.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                Intent intent = new Intent(getActivity(), PlaceItemDetailActivity.class);
+                intent.putExtra(PlaceItemDetailFragment.SELECTED_PLACE_ID, place.getPlaceId());
+                intent.putExtra(PlaceItemDetailFragment.SELECTED_LIST, "nearby");
+
+                startActivity(intent);
+            }
+        });
+
         ImageView photo = (ImageView) view.findViewById(R.id.photo);
-//        new PhotoTask(photo, mGoogleApiClient).execute(place.getPlaceId());
+        if (place.getPhotos().size() > 0)
+            photo.setImageBitmap(place.getPhotos().get(0));
 
         TextView name = (TextView) view.findViewById(R.id.name);
         name.setText(place.getName());

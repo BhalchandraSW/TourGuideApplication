@@ -1,4 +1,4 @@
-package uk.ac.aston.wadekabs.tourguideapplication;
+package uk.ac.aston.wadekabs.tourguideapplication.model;
 
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
@@ -10,23 +10,21 @@ import com.google.android.gms.location.places.PlacePhotoMetadataBuffer;
 import com.google.android.gms.location.places.PlacePhotoMetadataResult;
 import com.google.android.gms.location.places.Places;
 
+import uk.ac.aston.wadekabs.tourguideapplication.PlaceItemRecyclerViewAdapter;
+
 /**
  * Created by Bhalchandra Wadekar on 11/03/2017.
  */
 
-class PhotoTask extends AsyncTask<String, Void, Bitmap> {
+class PhotoTask extends AsyncTask<Place, Void, Bitmap> {
 
     private PlaceItemRecyclerViewAdapter.PlaceItemViewHolder mHolder = null;
     private ImageView mPhoto = null;
     private GoogleApiClient mGoogleApiClient;
 
-    PhotoTask(PlaceItemRecyclerViewAdapter.PlaceItemViewHolder holder, GoogleApiClient googleApiClient) {
-        mHolder = holder;
-        mGoogleApiClient = googleApiClient;
-    }
+    private Place place;
 
-    PhotoTask(ImageView photo, GoogleApiClient googleApiClient) {
-        mPhoto = photo;
+    PhotoTask(GoogleApiClient googleApiClient) {
         mGoogleApiClient = googleApiClient;
     }
 
@@ -36,13 +34,14 @@ class PhotoTask extends AsyncTask<String, Void, Bitmap> {
     }
 
     @Override
-    protected Bitmap doInBackground(String... params) {
+    protected Bitmap doInBackground(Place... params) {
 
         if (params.length != 1) {
             return null;
         }
 
-        final String placeId = params[0];
+        place = params[0];
+        final String placeId = params[0].getPlaceId();
         Bitmap image = null;
 
         PlacePhotoMetadataResult result = Places.GeoDataApi
@@ -71,6 +70,8 @@ class PhotoTask extends AsyncTask<String, Void, Bitmap> {
     @Override
     protected void onPostExecute(Bitmap bitmap) {
         super.onPostExecute(bitmap);
+
+        place.addPhoto(bitmap);
 
         if (mHolder != null) {
 

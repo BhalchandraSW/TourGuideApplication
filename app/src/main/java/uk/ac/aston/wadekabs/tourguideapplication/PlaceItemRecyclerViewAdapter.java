@@ -20,7 +20,7 @@ import uk.ac.aston.wadekabs.tourguideapplication.model.Place;
  * Created by Bhalchandra Wadekar on 11/03/2017.
  */
 
-class PlaceItemRecyclerViewAdapter extends RecyclerView.Adapter<PlaceItemRecyclerViewAdapter.PlaceItemViewHolder> {
+public class PlaceItemRecyclerViewAdapter extends RecyclerView.Adapter<PlaceItemRecyclerViewAdapter.PlaceItemViewHolder> {
 
     private String type;
     private List<Place> mPlaceItemList;
@@ -67,12 +67,12 @@ class PlaceItemRecyclerViewAdapter extends RecyclerView.Adapter<PlaceItemRecycle
         return mPlaceItemList.size();
     }
 
-    class PlaceItemViewHolder extends RecyclerView.ViewHolder {
+    public class PlaceItemViewHolder extends RecyclerView.ViewHolder {
 
-        Place mItem;
+        public Place mItem;
 
         final CardView mItemView;
-        final ImageView imageView;
+        public final ImageView imageView;
 
         final TextView nameTextView;
         final TextView addressTextView;

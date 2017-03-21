@@ -104,28 +104,30 @@ public class FilterPreferenceFragment extends PreferenceFragment implements Shar
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
 
-        switch (key) {
+        if (User.getUser() != null)
 
-            case COST_PREFERENCE:
+            switch (key) {
 
-                int cost = Integer.valueOf(costPreference.getValue());
-                FirebaseDatabase.getInstance().getReference("preferences").child(User.getUser().getUid()).child("priceLevel").setValue(cost);
+                case COST_PREFERENCE:
 
-                break;
+                    int cost = Integer.valueOf(costPreference.getValue());
+                    FirebaseDatabase.getInstance().getReference("preferences").child(User.getUser().getUid()).child("priceLevel").setValue(cost);
 
-            case TYPE_PREFERENCE:
+                    break;
 
-                Set<String> selectedTypes = typePreference.getValues();
+                case TYPE_PREFERENCE:
 
-                for (CharSequence type : typePreference.getEntryValues()) {
-                    if (selectedTypes.contains(type.toString())) {
-                        FirebaseDatabase.getInstance().getReference("preferences").child(User.getUser().getUid()).child("types").child(type.toString()).setValue(true);
-                    } else {
-                        FirebaseDatabase.getInstance().getReference("preferences").child(User.getUser().getUid()).child("types").child(type.toString()).removeValue();
+                    Set<String> selectedTypes = typePreference.getValues();
+
+                    for (CharSequence type : typePreference.getEntryValues()) {
+                        if (selectedTypes.contains(type.toString())) {
+                            FirebaseDatabase.getInstance().getReference("preferences").child(User.getUser().getUid()).child("types").child(type.toString()).setValue(true);
+                        } else {
+                            FirebaseDatabase.getInstance().getReference("preferences").child(User.getUser().getUid()).child("types").child(type.toString()).removeValue();
+                        }
                     }
-                }
 
-                break;
-        }
+                    break;
+            }
     }
 }

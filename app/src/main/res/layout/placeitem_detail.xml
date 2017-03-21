@@ -1,60 +1,83 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical">
-
-    <TextView xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:tools="http://schemas.android.com/tools"
-        android:id="@+id/placeitem_detail"
-        style="?android:attr/textAppearanceLarge"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:drawableLeft="@drawable/ic_place"
-        android:drawableStart="@drawable/ic_place"
-        android:padding="16dp"
-        android:textIsSelectable="true"
-        tools:context="uk.ac.aston.wadekabs.tourguideapplication.PlaceItemDetailFragment" />
-
-    <EditText
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:hint="Add personal notes. For example, top notch destination - had best time of my life :)" />
+    android:layout_height="match_parent">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="vertical">
 
-        <ImageView
-            android:id="@+id/favourite"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.5"
-            android:onClick="onClickFavourite"
-            app:srcCompat="@drawable/ic_favourite" />
+        <android.support.v4.view.ViewPager
+            android:layout_width="match_parent"
+            android:layout_height="216dp" />
 
-        <ImageView
-            android:id="@+id/visited"
-            android:layout_width="wrap_content"
+        <TextView xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:tools="http://schemas.android.com/tools"
+            android:id="@+id/address"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="0.5"
-            android:onClick="onClickVisited"
-            app:srcCompat="@drawable/ic_check_circle" />
+            android:drawableLeft="@drawable/ic_place"
+            android:drawableStart="@drawable/ic_place"
+            android:padding="16dp"
+            tools:context="uk.ac.aston.wadekabs.tourguideapplication.PlaceItemDetailFragment" />
+
+        <TextView
+            android:id="@+id/price_level"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp"
+            android:text="£££" />
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:hint="Add personal notes. For example, top notch destination - had best time of my life :)" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/favourite"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.5"
+                android:onClick="onClickFavourite"
+                app:srcCompat="@drawable/ic_favourite" />
+
+            <ImageView
+                android:id="@+id/visited"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.5"
+                android:onClick="onClickVisited"
+                app:srcCompat="@drawable/ic_check_circle" />
+
+        </LinearLayout>
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="onClickWantToVisit"
+            android:text="Want to visit" />
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="onClickShare"
+            android:text="Share" />
+
 
     </LinearLayout>
 
-    <Button
-        android:layout_width="match_parent"
+    <android.support.design.widget.FloatingActionButton
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:onClick="onClickWantToVisit"
-        android:text="Want to visit" />
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true" />
 
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:onClick="onClickShare"
-        android:text="Share" />
-
-</LinearLayout>
+</RelativeLayout>

@@ -1,10 +1,10 @@
 package uk.ac.aston.wadekabs.tourguideapplication.model;
 
 import android.graphics.Bitmap;
-import android.os.Parcel;
-import android.os.Parcelable;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -12,7 +12,7 @@ import java.util.Set;
  * Created by Bhalchandra Wadekar on 13/03/2017.
  */
 
-public class Place implements Parcelable {
+public class Place {
 
     private String mPlaceId;
     private PlaceLocation mLocation;
@@ -20,7 +20,7 @@ public class Place implements Parcelable {
     private String mAddress;
     private long mPriceLevel = -1; // -1 = unknown price level
     private Map<String, Boolean> mTypes;
-    private Bitmap mPhoto;
+    private List<Bitmap> mPhotos;
 
     private boolean mFavourite;
     private boolean mVisited;
@@ -33,29 +33,6 @@ public class Place implements Parcelable {
     public Place(String placeId) {
         this.mPlaceId = placeId;
     }
-
-    protected Place(Parcel in) {
-        mPlaceId = in.readString();
-        mLocation = in.readParcelable(PlaceLocation.class.getClassLoader());
-        mName = in.readString();
-        mAddress = in.readString();
-        mPriceLevel = in.readLong();
-        mPhoto = in.readParcelable(Bitmap.class.getClassLoader());
-        mFavourite = in.readByte() != 0;
-        mVisited = in.readByte() != 0;
-    }
-
-    public static final Creator<Place> CREATOR = new Creator<Place>() {
-        @Override
-        public Place createFromParcel(Parcel in) {
-            return new Place(in);
-        }
-
-        @Override
-        public Place[] newArray(int size) {
-            return new Place[size];
-        }
-    };
 
     public String getPlaceId() {
         return mPlaceId;
@@ -129,12 +106,18 @@ public class Place implements Parcelable {
         this.mWantToVisitDate = wantToVisitDate;
     }
 
-    public Bitmap getPhoto() {
-        return mPhoto;
+    public List<Bitmap> getPhotos() {
+        if (mPhotos == null)
+            mPhotos = new ArrayList<>();
+        return mPhotos;
     }
 
-    public void setPhoto(Bitmap photo) {
-        this.mPhoto = photo;
+    public void setPhotos(List<Bitmap> photos) {
+        this.mPhotos = photos;
+    }
+
+    public void addPhoto(Bitmap photo) {
+        getPhotos().add(photo);
     }
 
     boolean satisfiesFilter() {
@@ -161,22 +144,5 @@ public class Place implements Parcelable {
     @Override
     public String toString() {
         return mName;
-    }
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(mPlaceId);
-        dest.writeParcelable(mLocation, flags);
-        dest.writeString(mName);
-        dest.writeString(mAddress);
-        dest.writeLong(mPriceLevel);
-        dest.writeParcelable(mPhoto, flags);
-        dest.writeByte((byte) (mFavourite ? 1 : 0));
-        dest.writeByte((byte) (mVisited ? 1 : 0));
     }
 }

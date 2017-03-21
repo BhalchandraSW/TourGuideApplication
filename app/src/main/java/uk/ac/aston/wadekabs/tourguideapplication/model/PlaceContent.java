@@ -1,5 +1,6 @@
 package uk.ac.aston.wadekabs.tourguideapplication.model;
 
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -27,6 +28,8 @@ public class PlaceContent extends Observable implements Observer {
 
     private static DatabaseReference sDatabase;
 
+    private static GoogleApiClient sGoogleApiClient;
+
     private String mType;
     private List<Place> mPlaceList;
     private PlaceChildEventListener mListener;
@@ -51,6 +54,10 @@ public class PlaceContent extends Observable implements Observer {
             instance.addObserver(sNearby);
         }
         return sNearby.getPlaceList();
+    }
+
+    public static void setsGoogleApiClient(GoogleApiClient googleApiClient) {
+        sGoogleApiClient = googleApiClient;
     }
 
     public static void addFavourite(Place place) {
@@ -159,10 +166,9 @@ public class PlaceContent extends Observable implements Observer {
 
                     Place place = placeDetailsSnapshot.getValue(Place.class);
 
-                    System.out.println(place);
-
                     if (place != null && place.satisfiesFilter()) {
                         place.setPlaceId(placeId);
+                        new PhotoTask(sGoogleApiClient).execute(place);
 
                         // TODO: Remove listeners instead of this workaround
                         if (!mPlaceList.contains(place)) {
