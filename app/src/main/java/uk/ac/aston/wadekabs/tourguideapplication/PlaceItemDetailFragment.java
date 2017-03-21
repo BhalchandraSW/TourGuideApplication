@@ -15,7 +15,7 @@ import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceContent;
 /**
  * A fragment representing a single PlaceItem detail screen.
  * This fragment is either contained in a {@link PlaceItemListActivity}
- * in two-pane mode (on tablets) or a {@link PlaceItemDetailActivity}
+ * in two-pane mode (on tablets) or a {@link NearbyPlaceDetailActivity}
  * on handsets.
  */
 public class PlaceItemDetailFragment extends Fragment {

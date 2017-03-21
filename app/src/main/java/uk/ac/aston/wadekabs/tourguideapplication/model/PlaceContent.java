@@ -109,6 +109,24 @@ public class PlaceContent extends Observable implements Observer {
         return null;
     }
 
+    public static Place getPlace(String placeId) {
+
+        for (Place place : favourites()) {
+            if (place.getPlaceId().equals(placeId)) {
+                return place;
+            }
+        }
+
+        for (Place place : nearby()) {
+            if (place.getPlaceId().equals(placeId)) {
+                return place;
+            }
+        }
+
+        return null;
+    }
+
+
     @Override
     public void update(Observable o, Object arg) {
 

@@ -6,13 +6,14 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Observable;
 import java.util.Set;
 
 /**
  * Created by Bhalchandra Wadekar on 13/03/2017.
  */
 
-public class Place {
+public class Place extends Observable {
 
     private String mPlaceId;
     private PlaceLocation mLocation;
@@ -118,6 +119,8 @@ public class Place {
 
     public void addPhoto(Bitmap photo) {
         getPhotos().add(photo);
+        setChanged();
+        notifyObservers();
     }
 
     boolean satisfiesFilter() {

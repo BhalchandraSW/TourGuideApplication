@@ -5,7 +5,12 @@ import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.app.NavUtils;
+import android.support.v4.view.PagerAdapter;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -14,6 +19,9 @@ import android.view.View;
 import android.widget.ImageView;
 
 import com.google.firebase.database.FirebaseDatabase;
+
+import java.util.Observable;
+import java.util.Observer;
 
 import uk.ac.aston.wadekabs.tourguideapplication.model.Place;
 import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceContent;
@@ -25,9 +33,14 @@ import uk.ac.aston.wadekabs.tourguideapplication.model.User;
  * item details are presented side-by-side with a list of items
  * in a {@link PlaceItemListActivity}.
  */
-public class PlaceItemDetailActivity extends AppCompatActivity {
+public class NearbyPlaceDetailActivity extends AppCompatActivity implements Observer {
 
     private Place mSelectedPlace;
+
+    /**
+     * The pager adapter, which provides the pages to the view pager widget.
+     */
+    private PagerAdapter mPagerAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,6 +85,18 @@ public class PlaceItemDetailActivity extends AppCompatActivity {
         }
 
         mSelectedPlace = PlaceContent.getPlace(placeId, list);
+        if (mSelectedPlace != null) {
+            mSelectedPlace.addObserver(this);
+        }
+
+        // Instantiate a ViewPager and a PagerAdapter.
+        /*
+      The pager widget, which handles animation and allows swiping horizontally to access previous
+      and next wizard steps.
+     */
+        ViewPager mPager = (ViewPager) findViewById(R.id.place_photos_pager);
+        mPagerAdapter = new PlacePhotoPagerAdapter(getSupportFragmentManager());
+        mPager.setAdapter(mPagerAdapter);
     }
 
     @Override
@@ -137,5 +162,35 @@ public class PlaceItemDetailActivity extends AppCompatActivity {
         DatePickerFragment newFragment = new DatePickerFragment();
         newFragment.setPlace(mSelectedPlace);
         newFragment.show(getFragmentManager(), "datePicker");
+    }
+
+    @Override
+    public void update(Observable o, Object arg) {
+        mPagerAdapter.notifyDataSetChanged();
+    }
+
+    private class PlacePhotoPagerAdapter extends FragmentStatePagerAdapter {
+
+        PlacePhotoPagerAdapter(FragmentManager fm) {
+            super(fm);
+        }
+
+        @Override
+        public Fragment getItem(int position) {
+
+            Bundle args = new Bundle();
+            args.putInt(PhotoFragment.PHOTO_INDEX, position);
+            args.putString(PhotoFragment.SELECTED_PLACE, mSelectedPlace.getPlaceId());
+
+            PhotoFragment fragment = new PhotoFragment();
+            fragment.setArguments(args);
+
+            return fragment;
+        }
+
+        @Override
+        public int getCount() {
+            return mSelectedPlace.getPhotos().size();
+        }
     }
 }

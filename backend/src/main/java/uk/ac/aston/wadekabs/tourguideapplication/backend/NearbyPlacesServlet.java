@@ -72,7 +72,7 @@ public class NearbyPlacesServlet extends HttpServlet {
 
             @Override
             public void onChildChanged(DataSnapshot userLocationSnapshot, String s) {
-                removeNearbyPlaces(userLocationSnapshot);
+                // removeNearbyPlaces(userLocationSnapshot);
                 addNearbyPlaces(userLocationSnapshot);
             }
 

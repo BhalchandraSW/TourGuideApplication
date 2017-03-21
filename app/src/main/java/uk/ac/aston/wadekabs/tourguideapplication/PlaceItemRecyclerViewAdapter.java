@@ -53,7 +53,7 @@ public class PlaceItemRecyclerViewAdapter extends RecyclerView.Adapter<PlaceItem
             public void onClick(View v) {
 
                 Context context = v.getContext();
-                Intent intent = new Intent(context, PlaceItemDetailActivity.class);
+                Intent intent = new Intent(context, NearbyPlaceDetailActivity.class);
                 intent.putExtra(PlaceItemDetailFragment.SELECTED_PLACE_ID, holder.mItem.getPlaceId());
                 intent.putExtra(PlaceItemDetailFragment.SELECTED_LIST, type);
 

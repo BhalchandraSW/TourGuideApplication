@@ -35,7 +35,7 @@ public class PlaceSummaryFragment extends Fragment {
             @Override
             public void onClick(View v) {
 
-                Intent intent = new Intent(getActivity(), PlaceItemDetailActivity.class);
+                Intent intent = new Intent(getActivity(), NearbyPlaceDetailActivity.class);
                 intent.putExtra(PlaceItemDetailFragment.SELECTED_PLACE_ID, place.getPlaceId());
                 intent.putExtra(PlaceItemDetailFragment.SELECTED_LIST, "nearby");
 

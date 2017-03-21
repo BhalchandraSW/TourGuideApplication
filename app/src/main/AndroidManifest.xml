@@ -63,7 +63,7 @@
                 android:value="uk.ac.aston.wadekabs.tourguideapplication.MainActivity" />
         </activity>
         <activity
-            android:name=".PlaceItemDetailActivity"
+            android:name=".NearbyPlaceDetailActivity"
             android:label="@string/title_placeitem_detail"
             android:parentActivityName=".PlaceItemListActivity"
             android:theme="@style/AppTheme.NoActionBar">

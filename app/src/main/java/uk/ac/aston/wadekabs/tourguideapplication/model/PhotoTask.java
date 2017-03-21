@@ -2,13 +2,18 @@ package uk.ac.aston.wadekabs.tourguideapplication.model;
 
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
+import android.support.annotation.NonNull;
 import android.widget.ImageView;
 
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.location.places.PlacePhotoMetadata;
 import com.google.android.gms.location.places.PlacePhotoMetadataBuffer;
 import com.google.android.gms.location.places.PlacePhotoMetadataResult;
+import com.google.android.gms.location.places.PlacePhotoResult;
 import com.google.android.gms.location.places.Places;
+
+import java.util.List;
 
 import uk.ac.aston.wadekabs.tourguideapplication.PlaceItemRecyclerViewAdapter;
 
@@ -16,7 +21,7 @@ import uk.ac.aston.wadekabs.tourguideapplication.PlaceItemRecyclerViewAdapter;
  * Created by Bhalchandra Wadekar on 11/03/2017.
  */
 
-class PhotoTask extends AsyncTask<Place, Void, Bitmap> {
+class PhotoTask extends AsyncTask<Place, Void, List<Bitmap>> {
 
     private PlaceItemRecyclerViewAdapter.PlaceItemViewHolder mHolder = null;
     private ImageView mPhoto = null;
@@ -34,54 +39,55 @@ class PhotoTask extends AsyncTask<Place, Void, Bitmap> {
     }
 
     @Override
-    protected Bitmap doInBackground(Place... params) {
+    protected List<Bitmap> doInBackground(Place... params) {
 
         if (params.length != 1) {
             return null;
         }
 
         place = params[0];
-        final String placeId = params[0].getPlaceId();
-        Bitmap image = null;
 
         PlacePhotoMetadataResult result = Places.GeoDataApi
-                .getPlacePhotos(mGoogleApiClient, placeId).await();
+                .getPlacePhotos(mGoogleApiClient, place.getPlaceId()).await();
 
         if (result.getStatus().isSuccess()) {
             PlacePhotoMetadataBuffer photoMetadata = result.getPhotoMetadata();
             if (photoMetadata.getCount() > 0 && !isCancelled()) {
 
-                // Get the first bitmap and its attributions.
-                PlacePhotoMetadata photo = photoMetadata.get(0);
-                CharSequence attribution = photo.getAttributions();
+                for (PlacePhotoMetadata photo : photoMetadata) {
+                    // Get the first bitmap and its attributions.
+                    CharSequence attribution = photo.getAttributions();
 
-                // Load a scaled bitmap for this photo.
-                // TODO: convert dp's to pixels here
-                // TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 14, getResources().getDisplayMetrics());
-                image = photo.getPhoto(mGoogleApiClient).await()
-                        .getBitmap();
+                    // Load a scaled bitmap for this photo.
+                    // TODO: convert dp's to pixels here
+                    // TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 14, getResources().getDisplayMetrics());
+                    photo.getPhoto(mGoogleApiClient).setResultCallback(new ResultCallback<PlacePhotoResult>() {
+                        @Override
+                        public void onResult(@NonNull PlacePhotoResult placePhotoResult) {
+                            place.addPhoto(placePhotoResult.getBitmap());
+                        }
+                    });
+                }
             }
             // Release the PlacePhotoMetadataBuffer.
             photoMetadata.release();
         }
-        return image;
+        return place.getPhotos();
     }
 
     @Override
-    protected void onPostExecute(Bitmap bitmap) {
+    protected void onPostExecute(List<Bitmap> bitmap) {
         super.onPostExecute(bitmap);
-
-        place.addPhoto(bitmap);
 
         if (mHolder != null) {
 
             if (mHolder.imageView != null)
-                mHolder.imageView.setImageBitmap(bitmap);
-            mHolder.mItem.addPhoto(bitmap);
+                mHolder.imageView.setImageBitmap(bitmap.get(0));
+            mHolder.mItem.addPhoto(bitmap.get(0));
         }
 
         if (mPhoto != null) {
-            mPhoto.setImageBitmap(bitmap);
+            mPhoto.setImageBitmap(bitmap.get(0));
         }
     }
 }

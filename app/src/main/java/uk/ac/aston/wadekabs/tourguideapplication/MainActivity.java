@@ -75,7 +75,7 @@ public class MainActivity extends AppCompatActivity
      * The pager widget, which handles animation and allows swiping horizontally to access previous
      * and next wizard steps.
      */
-    private static ViewPager mPager;
+    private ViewPager mPager;
 
     /**
      * The pager adapter, which provides the pages to the view pager widget.
@@ -183,7 +183,7 @@ public class MainActivity extends AppCompatActivity
                 System.out.println("OnClick registered");
 
                 int position = mPager.getCurrentItem();
-                Intent intent = new Intent(MainActivity.this, PlaceItemDetailActivity.class);
+                Intent intent = new Intent(MainActivity.this, NearbyPlaceDetailActivity.class);
                 intent.putExtra(PlaceItemDetailFragment.SELECTED_PLACE_ID, position);
                 intent.putExtra(PlaceItemDetailFragment.SELECTED_LIST, "nearby");
                 startActivity(intent);
@@ -426,7 +426,6 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-
     }
 
     @Override
@@ -436,9 +435,8 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onPageScrollStateChanged(int state) {
-
     }
-    
+
     private class PlaceSummaryPagerAdapter extends FragmentStatePagerAdapter {
 
         PlaceSummaryPagerAdapter(FragmentManager fm) {
