@@ -33,11 +33,10 @@ import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceContent;
  * in a {@link PlaceItemListActivity}.
  */
 public class EditableFavouritePlaceDetailActivity extends AppCompatActivity implements Observer {
-
-    private Place mSelectedPlace;
-
+    
     private ViewPager mPager;
 
+    private Place mSelectedPlace;
     private Date date;
     private String notes;
 

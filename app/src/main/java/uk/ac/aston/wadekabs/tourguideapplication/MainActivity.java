@@ -41,7 +41,6 @@ import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.VisibleRegion;
-import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.maps.android.clustering.ClusterManager;
 
 import java.util.ArrayList;
@@ -62,11 +61,9 @@ public class MainActivity extends AppCompatActivity
 
     private static final int REQUEST_CODE_ACCESS_FINE_LOCATION = 1;
 
-    private GoogleMap mMap;
-
-    private GoogleApiClient mGoogleApiClient;
     private FilterPreferenceFragment mFilterPreferenceFragment;
 
+    private GoogleMap mMap;
     private ClusterManager<PlaceItem> mClusterManager;
 
     private List<Circle> mCircleList = new ArrayList<>();
@@ -87,8 +84,6 @@ public class MainActivity extends AppCompatActivity
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        System.out.println("onCreate: called\tsavedInstanceState: " + savedInstanceState);
 
         // Kick off the process of building a GoogleApiClient and requesting the LocationServices
         // API.
@@ -111,8 +106,6 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        // TODO: Show logged in user's profile picture in navigation drawer
-
         TextView userNameTextView = (TextView) navigationView.getHeaderView(0).findViewById(R.id.userNameTextView);
         userNameTextView.setText(User.getInstance().getUser().getDisplayName());
 
@@ -121,22 +114,7 @@ public class MainActivity extends AppCompatActivity
 
         NetworkImageView userImageView = (NetworkImageView) navigationView.getHeaderView(0).findViewById(R.id.imageView);
 
-//        RoundedBitmapDrawable profilePicture = null;
-
         Uri uri = User.getInstance().getUser() == null ? null : User.getInstance().getUser().getPhotoUrl();
-
-//        if (uri != null) {
-//            try {
-//                profilePicture = RoundedBitmapDrawableFactory.create(getResources(), new URL(uri.toString()).openStream());
-//                profilePicture.setCircular(true);
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//
-//        if (profilePicture != null) {
-//            userImageView.setImageBitmap(profilePicture.getBitmap());
-//        }
 
         if (uri != null) {
 
@@ -164,10 +142,6 @@ public class MainActivity extends AppCompatActivity
 
         PlaceContent.addNearbyObserver(this);
 
-        // TODO: Check whether this code is actually needed
-        String token = FirebaseInstanceId.getInstance().getToken();
-        System.out.println("Token:\t" + token);
-
         Intent intent = new Intent(this, LocationAwarenessService.class);
         startService(intent);
 
@@ -179,12 +153,12 @@ public class MainActivity extends AppCompatActivity
         mPager.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                System.out.println("OnClick registered");
 
-                int position = mPager.getCurrentItem();
                 Intent intent = new Intent(MainActivity.this, NearbyPlaceDetailActivity.class);
-                intent.putExtra(PlaceItemDetailFragment.SELECTED_PLACE_ID, position);
+
+                intent.putExtra(PlaceItemDetailFragment.SELECTED_PLACE_ID, mPager.getCurrentItem());
                 intent.putExtra(PlaceItemDetailFragment.SELECTED_LIST, "nearby");
+
                 startActivity(intent);
             }
         });
@@ -195,7 +169,7 @@ public class MainActivity extends AppCompatActivity
      * LocationServices API.
      */
     protected synchronized void buildGoogleApiClient() {
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
+        GoogleApiClient mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(Places.GEO_DATA_API)
                 .enableAutoManage(this, this)
                 .build();
@@ -216,9 +190,6 @@ public class MainActivity extends AppCompatActivity
     private void animateToFirstPlace() {
 
         if (mMap != null && PlaceContent.nearby().size() > 0) {
-
-            System.out.println("Animating to first place");
-
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(PlaceContent.nearby().get(0).getLocation().latLng(), 15.0f));
         }
     }
@@ -313,8 +284,6 @@ public class MainActivity extends AppCompatActivity
         });
 
         onAccessFineLocationPermissionGranted();
-
-        animateToFirstPlace();
 
         updateUI();
     }

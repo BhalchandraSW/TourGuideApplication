@@ -37,17 +37,11 @@ import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceContent;
 public class FavouritePlaceDetailActivity extends AppCompatActivity implements Observer {
 
     private static final int REQUEST_CODE_WRITE_EXTERNAL_STORAGE = 0;
+
     private Place mSelectedPlace;
 
     private ViewPager mPager;
-
-    /**
-     * The pager adapter, which provides the pages to the view pager widget.
-     */
     private PlacePhotoPagerAdapter mPagerAdapter;
-
-    private PhotoFragment mFragment;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -126,8 +120,6 @@ public class FavouritePlaceDetailActivity extends AppCompatActivity implements O
 
             case R.id.action_edit:
 
-                System.out.println("edit was clicked");
-
                 Intent intent = new Intent(this, EditableFavouritePlaceDetailActivity.class);
                 intent.putExtra(PlaceItemDetailFragment.SELECTED_PLACE_ID, mSelectedPlace.getPlaceId());
 
@@ -146,7 +138,7 @@ public class FavouritePlaceDetailActivity extends AppCompatActivity implements O
 
         share.setType("image/*");
 
-        share.putExtra(Intent.EXTRA_TEXT, "Hey view/download this image");
+        share.putExtra(Intent.EXTRA_TEXT, mSelectedPlace.getName());
 
         // Create the URI from the media
         int i = mPager.getCurrentItem();
