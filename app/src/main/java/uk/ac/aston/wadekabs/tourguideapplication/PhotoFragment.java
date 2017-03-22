@@ -18,7 +18,7 @@ import uk.ac.aston.wadekabs.tourguideapplication.model.Place;
 import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceContent;
 
 /**
- * Created by bhalchandrawadekar on 21/03/2017.
+ * Created by Bhalchandra Wadekar on 21/03/2017.
  */
 
 public class PhotoFragment extends Fragment {
