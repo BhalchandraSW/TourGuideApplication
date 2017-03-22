@@ -268,6 +268,11 @@ public class MainActivity extends AppCompatActivity
 
             case R.id.nav_favourites:
 
+                if (User.getUser() == null) {
+                    Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
+                    startActivity(intent);
+                }
+
                 Intent intent = new Intent(getApplicationContext(), PlaceItemListActivity.class);
                 startActivity(intent);
 
@@ -350,6 +355,11 @@ public class MainActivity extends AppCompatActivity
 
                 double horizontalDistance = nearLeftLocation.distanceTo(nearRightLocation);
                 double verticalDistance = nearLeftLocation.distanceTo(farLeftLocation);
+
+                double leftDistance =
+                        ((region.nearLeft.longitude - region.farLeft.longitude) * circleLocation.getLatitude())
+                                - ((region.nearLeft.latitude - region.farLeft.longitude) * circleLocation.getLongitude());
+                // + (region.nearLeft.);
 
                 double maximumRadius = nearLeftLocation.distanceTo(nearRightLocation);
                 double minimumRadius = maximumRadius / 2;

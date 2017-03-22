@@ -181,7 +181,7 @@ public class NearbyPlaceDetailActivity extends AppCompatActivity implements Obse
 
         @Override
         public int getCount() {
-            return mSelectedPlace.getPhotos().size();
+            return mSelectedPlace.getPictures().size();
         }
     }
 }

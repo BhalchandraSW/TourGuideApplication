@@ -18,6 +18,7 @@ import java.util.Observable;
 import java.util.Observer;
 
 import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceContent;
+import uk.ac.aston.wadekabs.tourguideapplication.model.User;
 
 /**
  * An activity representing a list of PlaceItems. This activity
@@ -57,7 +58,12 @@ public class PlaceItemListActivity extends AppCompatActivity implements GoogleAp
         }
 
         mPlaceItemRecyclerViewAdapter = new PlaceItemRecyclerViewAdapter(PlaceContent.favourites(), mGoogleApiClient, "favourites");
+
         PlaceContent.addFavouritesObserver(this);
+
+        System.out.println("Logged in User Id:\t" + User.getUser().getUid());
+
+        System.out.println("Favourite Places:\t" + PlaceContent.favourites().size());
 
         View recyclerView = findViewById(R.id.placeitem_list);
         assert recyclerView != null;
@@ -110,6 +116,8 @@ public class PlaceItemListActivity extends AppCompatActivity implements GoogleAp
 
     @Override
     public void update(Observable o, Object arg) {
+
         mPlaceItemRecyclerViewAdapter.notifyDataSetChanged();
+        System.out.println("Updating " + mPlaceItemRecyclerViewAdapter.getItemCount());
     }
 }

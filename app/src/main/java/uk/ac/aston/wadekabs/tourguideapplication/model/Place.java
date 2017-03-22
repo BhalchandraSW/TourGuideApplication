@@ -21,6 +21,9 @@ public class Place extends Observable {
     private String mAddress;
     private long mPriceLevel = -1; // -1 = unknown price level
     private Map<String, Boolean> mTypes;
+    private Map<String, Boolean> mPicturesMap;
+    private List<String> mPictures;
+
     private List<Bitmap> mPhotos;
 
     private boolean mFavourite;
@@ -121,6 +124,15 @@ public class Place extends Observable {
         getPhotos().add(photo);
         setChanged();
         notifyObservers();
+    }
+
+    public List<String> getPictures() {
+        return mPictures;
+    }
+
+    public void setPictures(Map<String, Boolean> picturesMap) {
+        mPicturesMap = picturesMap;
+        this.mPictures = new ArrayList<>(mPicturesMap.keySet());
     }
 
     boolean satisfiesFilter() {

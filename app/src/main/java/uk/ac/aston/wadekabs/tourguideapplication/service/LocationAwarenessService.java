@@ -30,9 +30,6 @@ public class LocationAwarenessService extends Service implements GoogleApiClient
 
         buildGoogleApiClient();
         mGoogleApiClient.connect();
-
-
-        System.out.println("Location service created.");
     }
 
     /**

@@ -22,14 +22,14 @@ import uk.ac.aston.wadekabs.tourguideapplication.model.Place;
 
 public class PlaceItemRecyclerViewAdapter extends RecyclerView.Adapter<PlaceItemRecyclerViewAdapter.PlaceItemViewHolder> {
 
-    private String type;
+    private String mType;
     private List<Place> mPlaceItemList;
     private GoogleApiClient mGoogleApiClient;
 
     PlaceItemRecyclerViewAdapter(List<Place> placeList, GoogleApiClient googleApiClient, String type) {
         mPlaceItemList = placeList;
         mGoogleApiClient = googleApiClient;
-        this.type = type;
+        mType = type;
     }
 
     @Override
@@ -55,7 +55,7 @@ public class PlaceItemRecyclerViewAdapter extends RecyclerView.Adapter<PlaceItem
                 Context context = v.getContext();
                 Intent intent = new Intent(context, NearbyPlaceDetailActivity.class);
                 intent.putExtra(PlaceItemDetailFragment.SELECTED_PLACE_ID, holder.mItem.getPlaceId());
-                intent.putExtra(PlaceItemDetailFragment.SELECTED_LIST, type);
+                intent.putExtra(PlaceItemDetailFragment.SELECTED_LIST, mType);
 
                 context.startActivity(intent);
             }

@@ -1,14 +1,19 @@
 package uk.ac.aston.wadekabs.tourguideapplication;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.util.LruCache;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.android.volley.toolbox.ImageLoader;
+import com.android.volley.toolbox.NetworkImageView;
+import com.android.volley.toolbox.Volley;
 
 import uk.ac.aston.wadekabs.tourguideapplication.model.Place;
 import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceContent;
@@ -43,9 +48,33 @@ public class PlaceSummaryFragment extends Fragment {
             }
         });
 
-        ImageView photo = (ImageView) view.findViewById(R.id.photo);
-        if (place.getPhotos().size() > 0)
-            photo.setImageBitmap(place.getPhotos().get(0));
+        String photoReference = place.getPictures().get(0);
+
+        String url = "https://maps.googleapis.com/maps/api/place/photo"
+                + "?key=" + "AIzaSyC6EOOcdrhZYb1TgD8xpPlRfPwDHnSddGQ"
+                + "&maxwidth=" + 1000
+                + "&photoreference=" + photoReference;
+
+        NetworkImageView photo = (NetworkImageView) view.findViewById(R.id.photo);
+        photo.setImageUrl(url,
+                new ImageLoader(Volley.newRequestQueue(getContext()), new ImageLoader.ImageCache() {
+
+                    private final LruCache<String, Bitmap>
+                            cache = new LruCache<>(20);
+
+                    @Override
+                    public Bitmap getBitmap(String url) {
+                        return cache.get(url);
+                    }
+
+                    @Override
+                    public void putBitmap(String url, Bitmap bitmap) {
+                        cache.put(url, bitmap);
+                    }
+                }));
+
+//        if (place.getPhotos().size() > 0)
+//            photo.setImageBitmap(place.getPhotos().get(0));
 
         TextView name = (TextView) view.findViewById(R.id.name);
         name.setText(place.getName());

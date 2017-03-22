@@ -54,12 +54,11 @@ public class FilterPreferenceFragment extends PreferenceFragment implements Shar
                 public void onDataChange(DataSnapshot costSnapshot) {
                     int cost = costSnapshot.getValue() != null ? Integer.valueOf(costSnapshot.getValue().toString()) : 2;
                     costPreference.setValue(String.valueOf(cost));
-                    costPreference.setSummary(costArray[cost]);
+                    costPreference.setSummary(costArray[cost + 1]);
                 }
 
                 @Override
                 public void onCancelled(DatabaseError databaseError) {
-
                 }
             });
         }

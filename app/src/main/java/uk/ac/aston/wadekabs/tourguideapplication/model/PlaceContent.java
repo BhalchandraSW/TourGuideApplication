@@ -65,6 +65,7 @@ public class PlaceContent extends Observable implements Observer {
     }
 
     public static void addFavouritesObserver(Observer observer) {
+        favourites();
         sFavourites.addObserver(observer);
     }
 
@@ -87,26 +88,6 @@ public class PlaceContent extends Observable implements Observer {
         }
 
         return mPlaceList;
-    }
-
-    public static Place getPlace(String placeId, String list) {
-        switch (list) {
-            case FAVOURITES:
-                for (Place place : favourites()) {
-                    if (place.getPlaceId().equals(placeId)) {
-                        return place;
-                    }
-                }
-                break;
-            case NEARBY:
-                for (Place place : nearby()) {
-                    if (place.getPlaceId().equals(placeId)) {
-                        return place;
-                    }
-                }
-                break;
-        }
-        return null;
     }
 
     public static Place getPlace(String placeId) {
@@ -136,7 +117,16 @@ public class PlaceContent extends Observable implements Observer {
             notifyObservers();
         }
 
-        String id = FirebaseInstanceId.getInstance().getId();
+        String id = "";
+
+        switch (mType) {
+            case FAVOURITES:
+                id = User.getUser().getUid();
+                break;
+            case NEARBY:
+                id = FirebaseInstanceId.getInstance().getId();
+                break;
+        }
 
         sDatabase.child(mType).child(id).removeEventListener(mListener);
         sDatabase.child(mType).child(id).addChildEventListener(mListener);
@@ -153,6 +143,8 @@ public class PlaceContent extends Observable implements Observer {
         @Override
         public void onChildAdded(DataSnapshot placeIdSnapshot, String s) {
             addPlaceHavingPlaceId(placeIdSnapshot.getKey());
+
+            System.out.println(mType + " " + placeIdSnapshot.getKey());
         }
 
         @Override
@@ -185,8 +177,8 @@ public class PlaceContent extends Observable implements Observer {
                     Place place = placeDetailsSnapshot.getValue(Place.class);
 
                     if (place != null && place.satisfiesFilter()) {
+
                         place.setPlaceId(placeId);
-                        new PhotoTask(sGoogleApiClient).execute(place);
 
                         // TODO: Remove listeners instead of this workaround
                         if (!mPlaceList.contains(place)) {

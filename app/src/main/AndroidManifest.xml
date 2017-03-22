@@ -62,6 +62,8 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="uk.ac.aston.wadekabs.tourguideapplication.MainActivity" />
+
+
         </activity>
         <activity
             android:name=".NearbyPlaceDetailActivity"
@@ -71,11 +73,12 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="uk.ac.aston.wadekabs.tourguideapplication.PlaceItemListActivity" />
+
+
         </activity>
         <activity
             android:name=".LoginActivity"
             android:label="@string/title_activity_login">
-
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

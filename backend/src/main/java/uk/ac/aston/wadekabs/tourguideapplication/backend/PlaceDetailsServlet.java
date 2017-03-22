@@ -16,6 +16,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.maps.GaeRequestHandler;
 import com.google.maps.GeoApiContext;
 import com.google.maps.PlacesApi;
+import com.google.maps.model.Photo;
 import com.google.maps.model.PlaceDetails;
 
 import java.io.IOException;
@@ -86,7 +87,11 @@ public class PlaceDetailsServlet extends HttpServlet {
 
                         newPlace.child("location").child("lat").setValue(placeDetails.geometry.location.lat);
                         newPlace.child("location").child("lng").setValue(placeDetails.geometry.location.lng);
-                        
+
+                        for (Photo photo : placeDetails.photos) {
+                            newPlace.child("pictures").child(photo.photoReference).setValue(true);
+                        }
+
                         HttpTransport transport = GoogleNetHttpTransport.newTrustedTransport();
                         com.google.api.client.json.JsonFactory factory = new GsonFactory();
 
