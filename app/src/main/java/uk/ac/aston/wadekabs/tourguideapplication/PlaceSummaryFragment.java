@@ -73,9 +73,6 @@ public class PlaceSummaryFragment extends Fragment {
                     }
                 }));
 
-//        if (place.getPhotos().size() > 0)
-//            photo.setImageBitmap(place.getPhotos().get(0));
-
         TextView name = (TextView) view.findViewById(R.id.name);
         name.setText(place.getName());
 
