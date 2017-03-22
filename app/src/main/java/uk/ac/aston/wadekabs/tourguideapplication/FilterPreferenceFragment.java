@@ -48,8 +48,8 @@ public class FilterPreferenceFragment extends PreferenceFragment implements Shar
         typePreference.setValues(getPreferenceScreen().getSharedPreferences().getStringSet(TYPE_PREFERENCE, new HashSet<String>()));
         // TODO: Set summary for type preference
 
-        if (User.getUser() != null) {
-            FirebaseDatabase.getInstance().getReference("preferences").child(User.getUser().getUid()).child("priceLevel").addValueEventListener(new ValueEventListener() {
+        if (User.getInstance().getUser() != null) {
+            FirebaseDatabase.getInstance().getReference("preferences").child(User.getInstance().getUser().getUid()).child("priceLevel").addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot costSnapshot) {
                     int cost = costSnapshot.getValue() != null ? Integer.valueOf(costSnapshot.getValue().toString()) : 2;
@@ -63,8 +63,8 @@ public class FilterPreferenceFragment extends PreferenceFragment implements Shar
             });
         }
 
-        if (User.getUser() != null) {
-            FirebaseDatabase.getInstance().getReference("preferences").child(User.getUser().getUid()).child("types").addValueEventListener(new ValueEventListener() {
+        if (User.getInstance().getUser() != null) {
+            FirebaseDatabase.getInstance().getReference("preferences").child(User.getInstance().getUser().getUid()).child("types").addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
 
@@ -103,14 +103,14 @@ public class FilterPreferenceFragment extends PreferenceFragment implements Shar
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
 
-        if (User.getUser() != null)
+        if (User.getInstance().getUser() != null)
 
             switch (key) {
 
                 case COST_PREFERENCE:
 
                     int cost = Integer.valueOf(costPreference.getValue());
-                    FirebaseDatabase.getInstance().getReference("preferences").child(User.getUser().getUid()).child("priceLevel").setValue(cost);
+                    FirebaseDatabase.getInstance().getReference("preferences").child(User.getInstance().getUser().getUid()).child("priceLevel").setValue(cost);
 
                     break;
 
@@ -120,9 +120,9 @@ public class FilterPreferenceFragment extends PreferenceFragment implements Shar
 
                     for (CharSequence type : typePreference.getEntryValues()) {
                         if (selectedTypes.contains(type.toString())) {
-                            FirebaseDatabase.getInstance().getReference("preferences").child(User.getUser().getUid()).child("types").child(type.toString()).setValue(true);
+                            FirebaseDatabase.getInstance().getReference("preferences").child(User.getInstance().getUser().getUid()).child("types").child(type.toString()).setValue(true);
                         } else {
-                            FirebaseDatabase.getInstance().getReference("preferences").child(User.getUser().getUid()).child("types").child(type.toString()).removeValue();
+                            FirebaseDatabase.getInstance().getReference("preferences").child(User.getInstance().getUser().getUid()).child("types").child(type.toString()).removeValue();
                         }
                     }
 

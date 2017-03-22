@@ -14,6 +14,8 @@
     <uses-permission android:name="android.permission.READ_PROFILE" />
     <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WRITE_CONTACTS" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
         android:allowBackup="true"
@@ -54,6 +56,7 @@
             android:name=".MainActivity"
             android:label="@string/title_activity_main"
             android:theme="@style/AppTheme.NoActionBar"></activity>
+
         <activity
             android:name=".PlaceItemListActivity"
             android:label="@string/title_placeitem_list"
@@ -62,20 +65,36 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="uk.ac.aston.wadekabs.tourguideapplication.MainActivity" />
-
-
         </activity>
+
         <activity
             android:name=".NearbyPlaceDetailActivity"
+            android:label="@string/title_placeitem_detail"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".MainActivity" />
+        </activity>
+
+        <activity
+            android:name=".FavouritePlaceDetailActivity"
             android:label="@string/title_placeitem_detail"
             android:parentActivityName=".PlaceItemListActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="uk.ac.aston.wadekabs.tourguideapplication.PlaceItemListActivity" />
-
-
         </activity>
+
+        <activity
+            android:name=".EditableFavouritePlaceDetailActivity"
+            android:label="@string/title_placeitem_detail"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="uk.ac.aston.wadekabs.tourguideapplication.FavouritePlaceDetailActivity" />
+        </activity>
+
         <activity
             android:name=".LoginActivity"
             android:label="@string/title_activity_login">

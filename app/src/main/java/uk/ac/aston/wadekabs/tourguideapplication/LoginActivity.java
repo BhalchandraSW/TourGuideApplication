@@ -125,8 +125,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     // User is signed in
                     Log.d(TAG, "onAuthStateChanged:signed_in:" + user.getUid());
 
-                    User.setUser(user);
-                    FirebaseDatabase.getInstance().getReference("users").child(User.getUser().getUid()).child("fcmToken").setValue(FirebaseInstanceId.getInstance().getToken());
+                    User.getInstance().setUser(user);
+                    FirebaseDatabase.getInstance().getReference("users").child(User.getInstance().getUser().getUid()).child("fcmToken").setValue(FirebaseInstanceId.getInstance().getToken());
 
                     Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                     startActivity(intent);

@@ -17,8 +17,8 @@
             android:layout_width="match_parent"
             android:layout_height="180dp">
 
-            <ImageView
-                android:id="@+id/imageView"
+            <com.android.volley.toolbox.NetworkImageView
+                android:id="@+id/photo"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:adjustViewBounds="true"
@@ -32,7 +32,7 @@
                 android:background="@drawable/title_scrim" />
 
             <TextView
-                android:id="@+id/nameTextView"
+                android:id="@+id/name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom"
@@ -44,12 +44,36 @@
         </FrameLayout>
 
         <TextView
-            android:id="@+id/addressTextView"
+            android:id="@+id/address"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:drawableLeft="@drawable/ic_place"
             android:drawableStart="@drawable/ic_place"
             android:padding="4dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <Button
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Remove from favourite" />
+
+            <Button
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Wish to visit" />
+
+            <Button
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Visited?" />
+
+        </LinearLayout>
 
     </LinearLayout>
 

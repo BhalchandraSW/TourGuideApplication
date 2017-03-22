@@ -63,5 +63,7 @@
     <string name="title_place_list">Places</string>
     <string name="title_place_detail">Place Detail</string>
     <string name="image_of_place">placeImageContentDescription</string>
+    <string name="nearby">Nearby</string>
+    <string name="itinerary">Itinerary</string>
 
 </resources>

@@ -42,8 +42,8 @@ public class PlaceFilter extends Observable {
 
             sInstance = new PlaceFilter();
 
-            if (User.getUser() != null) {
-                sDatabase.child("preferences").child(User.getUser().getUid()).addValueEventListener(new ValueEventListener() {
+            if (User.getInstance().getUser() != null) {
+                sDatabase.child("preferences").child(User.getInstance().getUser().getUid()).addValueEventListener(new ValueEventListener() {
 
                     @Override
                     public void onDataChange(DataSnapshot placeFilterSnapshot) {

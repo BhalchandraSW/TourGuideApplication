@@ -88,7 +88,7 @@ public class PlaceContent extends Observable implements Observer {
 
             switch (mType) {
                 case FAVOURITES:
-                    id = User.getUser().getUid();
+                    id = User.getInstance().getUser().getUid();
                     break;
                 case NEARBY:
                     id = FirebaseInstanceId.getInstance().getId();
@@ -132,7 +132,7 @@ public class PlaceContent extends Observable implements Observer {
 
         switch (mType) {
             case FAVOURITES:
-                id = User.getUser().getUid();
+                id = User.getInstance().getUser().getUid();
                 break;
             case NEARBY:
                 id = FirebaseInstanceId.getInstance().getId();

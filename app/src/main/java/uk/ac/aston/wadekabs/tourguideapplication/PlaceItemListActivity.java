@@ -61,7 +61,7 @@ public class PlaceItemListActivity extends AppCompatActivity implements GoogleAp
 
         PlaceContent.addFavouritesObserver(this);
 
-        System.out.println("Logged in User Id:\t" + User.getUser().getUid());
+        System.out.println("Logged in User Id:\t" + User.getInstance().getUser().getUid());
 
         System.out.println("Favourite Places:\t" + PlaceContent.favourites().size());
 

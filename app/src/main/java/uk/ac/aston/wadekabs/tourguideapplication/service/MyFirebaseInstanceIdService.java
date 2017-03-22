@@ -24,8 +24,8 @@ public class MyFirebaseInstanceIdService extends FirebaseInstanceIdService {
         // If you want to send messages to this application instance or
         // manage this apps subscriptions on the server side, send the
         // Instance ID token to your app server.
-        if (User.getUser() != null) {
-            FirebaseDatabase.getInstance().getReference("users").child(User.getUser().getUid()).child("fcmToken").setValue(refreshedToken);
+        if (User.getInstance().getUser() != null) {
+            FirebaseDatabase.getInstance().getReference("users").child(User.getInstance().getUser().getUid()).child("fcmToken").setValue(refreshedToken);
         }
     }
 }

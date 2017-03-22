@@ -2,6 +2,8 @@ package uk.ac.aston.wadekabs.tourguideapplication.model;
 
 import android.graphics.Bitmap;
 
+import com.google.firebase.database.FirebaseDatabase;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -23,6 +25,7 @@ public class Place extends Observable {
     private Map<String, Boolean> mTypes;
     private Map<String, Boolean> mPicturesMap;
     private List<String> mPictures;
+    private String notes;
 
     private List<Bitmap> mPhotos;
 
@@ -108,6 +111,7 @@ public class Place extends Observable {
 
     public void setWantToVisitDate(Date wantToVisitDate) {
         this.mWantToVisitDate = wantToVisitDate;
+        FirebaseDatabase.getInstance().getReference("users").child(User.getInstance().getUser().getUid()).child("favourites").child(mPlaceId).child("visitDate").setValue(wantToVisitDate);
     }
 
     public List<Bitmap> getPhotos() {
@@ -133,6 +137,17 @@ public class Place extends Observable {
     public void setPictures(Map<String, Boolean> picturesMap) {
         mPicturesMap = picturesMap;
         this.mPictures = new ArrayList<>(mPicturesMap.keySet());
+    }
+
+
+    public String getNotes() {
+        return notes;
+    }
+
+    public void setNotes(String notes) {
+        this.notes = notes;
+
+        FirebaseDatabase.getInstance().getReference("users").child(User.getInstance().getUser().getUid()).child("favourites").child(mPlaceId).child("notes").setValue(notes);
     }
 
     boolean satisfiesFilter() {

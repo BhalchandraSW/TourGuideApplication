@@ -1,27 +1,30 @@
 package uk.ac.aston.wadekabs.tourguideapplication;
 
+import android.app.DatePickerDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.app.NavUtils;
-import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.format.DateUtils;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.DatePicker;
+import android.widget.EditText;
 
-import com.google.firebase.database.FirebaseDatabase;
-
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Observable;
 import java.util.Observer;
 
 import uk.ac.aston.wadekabs.tourguideapplication.model.Place;
 import uk.ac.aston.wadekabs.tourguideapplication.model.PlaceContent;
-import uk.ac.aston.wadekabs.tourguideapplication.model.User;
 
 /**
  * An activity representing a single PlaceItem detail screen. This
@@ -29,20 +32,25 @@ import uk.ac.aston.wadekabs.tourguideapplication.model.User;
  * item details are presented side-by-side with a list of items
  * in a {@link PlaceItemListActivity}.
  */
-public class NearbyPlaceDetailActivity extends AppCompatActivity implements Observer {
+public class EditableFavouritePlaceDetailActivity extends AppCompatActivity implements Observer {
 
     private Place mSelectedPlace;
+
+    private ViewPager mPager;
+
+    private Date date;
+    private String notes;
 
     /**
      * The pager adapter, which provides the pages to the view pager widget.
      */
-    private PagerAdapter mPagerAdapter;
+    private PlacePhotoPagerAdapter mPagerAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_placeitem_detail);
+        setContentView(R.layout.activity_editable_favourite_place_detail);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.detail_toolbar);
         setSupportActionBar(toolbar);
@@ -83,36 +91,80 @@ public class NearbyPlaceDetailActivity extends AppCompatActivity implements Obse
             mSelectedPlace.addObserver(this);
         }
 
-        ViewPager mPager = (ViewPager) findViewById(R.id.place_photos_pager);
+        mPager = (ViewPager) findViewById(R.id.place_photos_pager);
         mPagerAdapter = new PlacePhotoPagerAdapter(getSupportFragmentManager());
         mPager.setAdapter(mPagerAdapter);
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.editable_favourite_menu, menu);
+        return true;
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-        if (id == android.R.id.home) {
-            // This ID represents the Home or Up button. In the case of this
-            // activity, the Up button is shown. Use NavUtils to allow users
-            // to navigate up one level in the application structure. For
-            // more details, see the Navigation pattern on Android Design:
-            //
-            // http://developer.android.com/design/patterns/navigation.html#up-vs-back
-            //
-            NavUtils.navigateUpTo(this, new Intent(this, PlaceItemListActivity.class));
-            return true;
+
+        switch (id) {
+
+            case android.R.id.home:
+
+                if (date != null)
+                    mSelectedPlace.setWantToVisitDate(date);
+
+                EditText notesText = (EditText) findViewById(R.id.notes);
+                notes = notesText.getText().toString();
+                mSelectedPlace.setNotes(notes);
+
+                // This ID represents the Home or Up button. In the case of this
+                // activity, the Up button is shown. Use NavUtils to allow users
+                // to navigate up one level in the application structure. For
+                // more details, see the Navigation pattern on Android Design:
+                //
+                // http://developer.android.com/design/patterns/navigation.html#up-vs-back
+                //
+                NavUtils.navigateUpTo(this, new Intent(this, PlaceItemListActivity.class));
+
+                return true;
         }
+
         return super.onOptionsItemSelected(item);
     }
 
-    public void onClickFavourite(View view) {
+    public void onClickWantToVisit(final View view) {
 
-        mSelectedPlace.setFavourite(!mSelectedPlace.isFavourite());
+        final EditText text = (EditText) view;
 
-        if (mSelectedPlace.isFavourite())
-            FirebaseDatabase.getInstance().getReference("favourites").child(User.getInstance().getUser().getUid()).child(mSelectedPlace.getPlaceId()).setValue(mSelectedPlace.isFavourite());
-        else
-            FirebaseDatabase.getInstance().getReference("favourites").child(User.getInstance().getUser().getUid()).child(mSelectedPlace.getPlaceId()).removeValue();
+        //To show current date in the datepicker
+        Calendar mcurrentDate = Calendar.getInstance();
+        int mYear = mcurrentDate.get(Calendar.YEAR);
+        int mMonth = mcurrentDate.get(Calendar.MONTH);
+        int mDay = mcurrentDate.get(Calendar.DAY_OF_MONTH);
+
+        DatePickerDialog mDatePicker = new DatePickerDialog(EditableFavouritePlaceDetailActivity.this, new DatePickerDialog.OnDateSetListener() {
+
+            @Override
+            public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
+
+                Calendar calendar = Calendar.getInstance();
+                calendar.set(year, month, dayOfMonth);
+
+                date = calendar.getTime();
+
+                CharSequence relativeDate = DateUtils.getRelativeTimeSpanString(calendar.getTimeInMillis()); //, System.currentTimeMillis(), 0L, DateUtils.FORMAT_ABBREV_RELATIVE);
+
+                System.out.println("Date:\t" + relativeDate);
+
+                text.setText(relativeDate);
+            }
+
+        }, mYear, mMonth, mDay);
+
+        mDatePicker.setTitle("Select date");
+
+        mDatePicker.show();
     }
 
     @Override
@@ -141,7 +193,7 @@ public class NearbyPlaceDetailActivity extends AppCompatActivity implements Obse
 
         @Override
         public int getCount() {
-            return mSelectedPlace != null ? mSelectedPlace.getPictures().size() : 0;
+            return mSelectedPlace.getPictures().size();
         }
     }
 }

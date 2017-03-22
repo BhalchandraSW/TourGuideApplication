@@ -114,17 +114,16 @@ public class MainActivity extends AppCompatActivity
         // TODO: Show logged in user's profile picture in navigation drawer
 
         TextView userNameTextView = (TextView) navigationView.getHeaderView(0).findViewById(R.id.userNameTextView);
-        // userNameTextView.setText(User.getUser().getDisplayName());
+        userNameTextView.setText(User.getInstance().getUser().getDisplayName());
 
         TextView userEmailTextView = (TextView) navigationView.getHeaderView(0).findViewById(R.id.userEmailTextView);
-        // userEmailTextView.setText(User.getUser().getEmail());
-
+        userEmailTextView.setText(User.getInstance().getUser().getEmail());
 
         NetworkImageView userImageView = (NetworkImageView) navigationView.getHeaderView(0).findViewById(R.id.imageView);
 
 //        RoundedBitmapDrawable profilePicture = null;
 
-        Uri uri = User.getUser() == null ? null : User.getUser().getPhotoUrl();
+        Uri uri = User.getInstance().getUser() == null ? null : User.getInstance().getUser().getPhotoUrl();
 
 //        if (uri != null) {
 //            try {
@@ -268,7 +267,7 @@ public class MainActivity extends AppCompatActivity
 
             case R.id.nav_favourites:
 
-                if (User.getUser() == null) {
+                if (User.getInstance().getUser() == null) {
                     Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
                     startActivity(intent);
                 }
