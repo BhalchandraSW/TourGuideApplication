@@ -75,9 +75,6 @@ public class PlaceItemRecyclerViewAdapter extends RecyclerView.Adapter<PlaceItem
                     }
                 }));
 
-
-//        new PhotoTask(holder, mGoogleApiClient).execute(holder.mItem.getPlaceId());
-
         holder.mItemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
