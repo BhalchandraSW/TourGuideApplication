@@ -83,8 +83,19 @@ public class PlaceContent extends Observable implements Observer {
         if (mPlaceList == null) {
             mPlaceList = new ArrayList<>();
             mListener = new PlaceChildEventListener(mPlaceList);
-            // TODO: This is probably not applicable for details node.
-            sDatabase.child(mType).child(FirebaseInstanceId.getInstance().getId()).addChildEventListener(mListener);
+
+            String id = "";
+
+            switch (mType) {
+                case FAVOURITES:
+                    id = User.getUser().getUid();
+                    break;
+                case NEARBY:
+                    id = FirebaseInstanceId.getInstance().getId();
+                    break;
+            }
+
+            sDatabase.child(mType).child(id).addChildEventListener(mListener);
         }
 
         return mPlaceList;

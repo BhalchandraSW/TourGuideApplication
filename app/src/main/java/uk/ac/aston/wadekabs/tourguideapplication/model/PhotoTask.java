@@ -81,8 +81,8 @@ class PhotoTask extends AsyncTask<Place, Void, List<Bitmap>> {
 
         if (mHolder != null) {
 
-            if (mHolder.imageView != null)
-                mHolder.imageView.setImageBitmap(bitmap.get(0));
+            if (mHolder.photo != null)
+                mHolder.photo.setImageBitmap(bitmap.get(0));
             mHolder.mItem.addPhoto(bitmap.get(0));
         }
 

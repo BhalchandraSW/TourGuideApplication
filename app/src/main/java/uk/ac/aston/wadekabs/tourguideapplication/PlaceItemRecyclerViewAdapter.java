@@ -2,14 +2,17 @@ package uk.ac.aston.wadekabs.tourguideapplication;
 
 import android.content.Context;
 import android.content.Intent;
-import android.support.v7.widget.CardView;
+import android.graphics.Bitmap;
 import android.support.v7.widget.RecyclerView;
+import android.util.LruCache;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.android.volley.toolbox.ImageLoader;
+import com.android.volley.toolbox.NetworkImageView;
+import com.android.volley.toolbox.Volley;
 import com.google.android.gms.common.api.GoogleApiClient;
 
 import java.util.List;
@@ -25,8 +28,10 @@ public class PlaceItemRecyclerViewAdapter extends RecyclerView.Adapter<PlaceItem
     private String mType;
     private List<Place> mPlaceItemList;
     private GoogleApiClient mGoogleApiClient;
+    private Context mContext;
 
-    PlaceItemRecyclerViewAdapter(List<Place> placeList, GoogleApiClient googleApiClient, String type) {
+    PlaceItemRecyclerViewAdapter(Context context, List<Place> placeList, GoogleApiClient googleApiClient, String type) {
+        mContext = context;
         mPlaceItemList = placeList;
         mGoogleApiClient = googleApiClient;
         mType = type;
@@ -34,8 +39,8 @@ public class PlaceItemRecyclerViewAdapter extends RecyclerView.Adapter<PlaceItem
 
     @Override
     public PlaceItemViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        CardView view = (CardView) LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.place_card, parent, false);
+        View view = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.place_list_item, parent, false);
         return new PlaceItemViewHolder(view);
     }
 
@@ -43,10 +48,35 @@ public class PlaceItemRecyclerViewAdapter extends RecyclerView.Adapter<PlaceItem
     public void onBindViewHolder(final PlaceItemViewHolder holder, int position) {
 
         holder.mItem = mPlaceItemList.get(position);
-        holder.nameTextView.setText(holder.mItem.getName());
-        holder.addressTextView.setText(holder.mItem.getAddress());
+        holder.name.setText(holder.mItem.getName());
+        holder.address.setText(holder.mItem.getAddress());
 
-        new PhotoTask(holder, mGoogleApiClient).execute(holder.mItem.getPlaceId());
+        String photoReference = holder.mItem.getPictures().get(position);
+
+        String url = "https://maps.googleapis.com/maps/api/place/photo"
+                + "?key=" + "AIzaSyC6EOOcdrhZYb1TgD8xpPlRfPwDHnSddGQ"
+                + "&maxwidth=" + 1000
+                + "&photoreference=" + photoReference;
+
+        holder.photo.setImageUrl(url,
+                new ImageLoader(Volley.newRequestQueue(mContext), new ImageLoader.ImageCache() {
+
+                    private final LruCache<String, Bitmap>
+                            cache = new LruCache<>(20);
+
+                    @Override
+                    public Bitmap getBitmap(String url) {
+                        return cache.get(url);
+                    }
+
+                    @Override
+                    public void putBitmap(String url, Bitmap bitmap) {
+                        cache.put(url, bitmap);
+                    }
+                }));
+
+
+//        new PhotoTask(holder, mGoogleApiClient).execute(holder.mItem.getPlaceId());
 
         holder.mItemView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -71,22 +101,21 @@ public class PlaceItemRecyclerViewAdapter extends RecyclerView.Adapter<PlaceItem
 
         public Place mItem;
 
-        final CardView mItemView;
-        public final ImageView imageView;
+        final View mItemView;
 
-        final TextView nameTextView;
-        final TextView addressTextView;
+        public final NetworkImageView photo;
+        final TextView name;
+        final TextView address;
 
-        PlaceItemViewHolder(CardView itemView) {
+        PlaceItemViewHolder(View itemView) {
 
             super(itemView);
 
             mItemView = itemView;
 
-            imageView = (ImageView) itemView.findViewById(R.id.imageView);
-
-            nameTextView = (TextView) itemView.findViewById(R.id.nameTextView);
-            addressTextView = (TextView) itemView.findViewById(R.id.addressTextView);
+            photo = (NetworkImageView) itemView.findViewById(R.id.photo);
+            name = (TextView) itemView.findViewById(R.id.name);
+            address = (TextView) itemView.findViewById(R.id.address);
         }
     }
 }
