@@ -65,7 +65,7 @@ public class PlaceItemDetailFragment extends Fragment {
         String[] priceLevels = getResources().getStringArray(R.array.pref_budget_list_titles);
 
         TextView priceLevel = (TextView) rootView.findViewById(R.id.price_level);
-        priceLevel.setText(priceLevels[(int) mPlace.getPriceLevel() + 1]);
+        // priceLevel.setText(priceLevels[(int) mPlace.getPriceLevel() + 1]);
 
         return rootView;
     }

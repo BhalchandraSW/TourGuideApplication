@@ -31,20 +31,27 @@
             android:drawableLeft="@drawable/ic_attach_money"
             android:drawableStart="@drawable/ic_attach_money"
             android:padding="16dp"
+            android:text="Unknown"
             tools:context="uk.ac.aston.wadekabs.tourguideapplication.PlaceItemDetailFragment" />
 
         <TextView
             android:id="@+id/notes"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:drawableLeft="@drawable/ic_note_black_24dp"
+            android:drawableStart="@drawable/ic_note_black_24dp"
             android:hint="Add notes, for example, my first skiing experience"
-            android:padding="16dp" />
+            android:padding="16dp"
+            android:text=" My first hotel stay was here." />
 
         <TextView
             android:id="@+id/visit_status"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Last visited 4 months ago" />
+            android:drawableLeft="@drawable/ic_schedule"
+            android:drawableStart="@drawable/ic_schedule"
+            android:padding="16dp"
+            android:text=" Last visited 4 months ago" />
 
     </LinearLayout>
 

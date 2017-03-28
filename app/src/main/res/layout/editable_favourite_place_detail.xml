@@ -19,31 +19,37 @@
             android:id="@+id/address"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_margin="16dp"
             android:drawableLeft="@drawable/ic_place"
             android:drawableStart="@drawable/ic_place"
-            android:padding="16dp"
             tools:context="uk.ac.aston.wadekabs.tourguideapplication.PlaceItemDetailFragment" />
 
         <TextView
             android:id="@+id/price_level"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_margin="16dp"
             android:drawableLeft="@drawable/ic_attach_money"
             android:drawableStart="@drawable/ic_attach_money"
-            android:padding="16dp"
+            android:text="Unknown"
             tools:context="uk.ac.aston.wadekabs.tourguideapplication.PlaceItemDetailFragment" />
 
         <EditText
             android:id="@+id/notes"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            android:drawableLeft="@drawable/ic_note_black_24dp"
+            android:drawableStart="@drawable/ic_note_black_24dp"
             android:hint="Add notes, for example, my first skiing experience"
-            android:inputType="textMultiLine"
-            android:padding="16dp" />
+            android:inputType="textMultiLine" />
 
         <EditText
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            android:drawableLeft="@drawable/ic_schedule"
+            android:drawableStart="@drawable/ic_schedule"
             android:focusable="false"
             android:onClick="onClickWantToVisit" />
 

@@ -5,7 +5,6 @@
       <module fileurl="file://$PROJECT_DIR$/TourGuideApplication.iml" filepath="$PROJECT_DIR$/TourGuideApplication.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/backend/backend.iml" filepath="$PROJECT_DIR$/backend/backend.iml" />
-      <module fileurl="file://$PROJECT_DIR$/google-maps-services-java/google-maps-services-java.iml" filepath="$PROJECT_DIR$/google-maps-services-java/google-maps-services-java.iml" />
     </modules>
   </component>
 </project>
